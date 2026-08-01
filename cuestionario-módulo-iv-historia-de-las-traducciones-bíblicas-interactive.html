@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Módulo IV: Historia de las Traducciones Bíblicas</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh; padding: 20px; color: #333;
+}
+.container { max-width: 700px; margin: 0 auto; }
+.header { text-align: center; color: #fff; padding: 30px 20px; }
+.header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.header .meta { font-size: 14px; opacity: 0.9; }
+.progress-bar { background: rgba(255,255,255,0.3); border-radius: 10px; height: 8px; margin: 20px 0; overflow: hidden; }
+.progress-fill { background: #fff; height: 100%; width: 0%; transition: width 0.4s ease; border-radius: 10px; }
+.question { background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: none; }
+.question.active { display: block; }
+.q-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; color: #888; }
+.q-number { font-weight: 600; color: #667eea; }
+.q-text { font-size: 18px; font-weight: 600; line-height: 1.5; margin-bottom: 25px; color: #222; }
+.options { display: flex; flex-direction: column; gap: 12px; }
+.option-wrapper { display: flex; flex-direction: column; }
+.option {
+  display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px;
+  border: 2px solid #e8e8e8; border-radius: 12px; background: #fafafa;
+  cursor: pointer; transition: all 0.2s; text-align: left; font-size: 15px; width: 100%;
+}
+[dir="rtl"] .option { text-align: right; flex-direction: row-reverse; }
+.option:hover:not(.disabled) { border-color: #667eea; background: #f5f3ff; }
+.option.selected { border-color: #667eea; background: #ede9fe; }
+.option.correct { border-color: #22c55e; background: #dcfce7; }
+.option.incorrect { border-color: #ef4444; background: #fee2e2; }
+.option.disabled { cursor: default; }
+.option.show-correct { border-color: #22c55e; background: #dcfce7; }
+.opt-label {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%; background: #e8e8e8;
+  font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+.option.selected .opt-label { background: #667eea; color: #fff; }
+.option.correct .opt-label { background: #22c55e; color: #fff; }
+.option.incorrect .opt-label { background: #ef4444; color: #fff; }
+.option.show-correct .opt-label { background: #22c55e; color: #fff; }
+.opt-text { padding-top: 5px; line-height: 1.5; }
+
+/* Individual option feedback */
+.option-feedback {
+  margin: 8px 0 4px 46px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+[dir="rtl"] .option-feedback { margin-left: 0; margin-right: 46px; }
+.option-feedback.correct-feedback {
+  background: #dcfce7;
+  border-left: 3px solid #22c55e;
+}
+.option-feedback.incorrect-feedback {
+  background: #fef3f2;
+  border-left: 3px solid #fca5a5;
+}
+[dir="rtl"] .option-feedback.correct-feedback,
+[dir="rtl"] .option-feedback.incorrect-feedback {
+  border-left: none;
+  border-right: 3px solid;
+}
+[dir="rtl"] .option-feedback.correct-feedback { border-right-color: #22c55e; }
+[dir="rtl"] .option-feedback.incorrect-feedback { border-right-color: #fca5a5; }
+.feedback-status {
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.feedback-status.correct { color: #166534; }
+.feedback-status.incorrect { color: #991b1b; }
+.feedback-rationale { color: #444; }
+
+/* Hint box */
+.hint-box {
+  margin: 12px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+}
+.hint-toggle {
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hint-toggle:hover { background: #fef3c7; }
+.hint-content {
+  padding: 0 16px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s, padding 0.3s;
+  font-size: 14px;
+  color: #78350f;
+  line-height: 1.5;
+}
+.hint-box.show .hint-content {
+  padding: 0 16px 12px;
+  max-height: 200px;
+}
+
+.next-btn {
+  margin-top: 20px; width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none;
+  border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.next-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
+.hidden { display: none !important; }
+.results { background: #fff; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: none; }
+.results.active { display: block; }
+.results h2 { font-size: 28px; margin-bottom: 10px; color: #333; }
+.results .score { font-size: 64px; font-weight: 700; color: #667eea; margin: 20px 0; }
+.results .score-text { font-size: 18px; color: #666; margin-bottom: 30px; }
+.restart-btn {
+  padding: 14px 40px; background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+
+/* Math CSS */
+.math, .math-block { font-family: "Cambria Math", "Times New Roman", Times, serif; font-style: italic; }
+.math-block { display: block; text-align: center; margin: 10px 0; font-size: 110%; }
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 3px; font-size: 0.9em; }
+.frac-num { border-bottom: 1px solid currentColor; padding: 0 4px 2px; line-height: 1.2; }
+.frac-den { padding: 2px 4px 0; line-height: 1.2; }
+.sqrt { white-space: nowrap; }
+.sqrt-content { border-top: 1px solid currentColor; padding: 0 3px; margin-left: 2px; }
+sup, sub { font-size: 0.75em; }
+sup { vertical-align: super; }
+sub { vertical-align: sub; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Cuestionario - Módulo IV: Historia de las Traducciones Bíblicas</h1>
+    <div class="meta">10 preguntas</div>
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+  </div>
+  <div id="quiz-container">
+        <div class="question" data-index="0">
+          <div class="q-header">
+            <span class="q-number">Pregunta 1</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Qué define técnicamente al término &quot;Versión&quot; dentro del estudio de las ciencias bíblicas?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere la raíz de la palabra y su relación con el cambio de un idioma a otro.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Un comentario analiza el texto ya existente, mientras que una versión es el resultado del traslado lingüístico del texto sagrado.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Un comentario sistemático sobre el contexto histórico del Antiguo Testamento.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Un comentario analiza el texto ya existente, mientras que una versión es el resultado del traslado lingüístico del texto sagrado.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="Este término se aplica estrictamente al proceso de verter el contenido desde el hebreo, arameo o griego hacia idiomas diferentes para su comprensión.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Cualquier traducción de la Biblia de sus idiomas originales a otra lengua.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Este término se aplica estrictamente al proceso de verter el contenido desde el hebreo, arameo o griego hacia idiomas diferentes para su comprensión.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Este concepto se refiere más a la hermenéutica o exégesis que al proceso formal de traducción textual de los idiomas originales.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Una interpretación personal de un pasaje bíblico realizada por un teólogo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Este concepto se refiere más a la hermenéutica o exégesis que al proceso formal de traducción textual de los idiomas originales.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Las notas al pie son herramientas de estudio añadidas, pero no constituyen por sí mismas el acto de traducir el texto base.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Una edición moderna de la Biblia que incluye exclusivamente notas al pie.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Las notas al pie son herramientas de estudio añadidas, pero no constituyen por sí mismas el acto de traducir el texto base.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="1">
+          <div class="q-header">
+            <span class="q-number">Pregunta 2</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Cuál es la importancia fundamental de la Septuaginta (<span class="math">LXX</span>) para el desarrollo del Nuevo Testamento?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en qué idioma leían las Escrituras los cristianos de la Diáspora y los autores de los evangelios.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Por el contrario, la Septuaginta incluía libros que hoy se consideran apócrifos en el canon protestante, influyendo en su posterior difusión.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Fue la versión que estableció definitivamente la exclusión de los libros apócrifos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Por el contrario, la Septuaginta incluía libros que hoy se consideran apócrifos en el canon protestante, influyendo en su posterior difusión.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La Septuaginta se centra en el Antiguo Testamento y fue producida siglos antes del nacimiento de los apóstoles y la redacción del Nuevo Testamento.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Contenía los manuscritos originales escritos por los propios apóstoles.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Septuaginta se centra en el Antiguo Testamento y fue producida siglos antes del nacimiento de los apóstoles y la redacción del Nuevo Testamento.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="La mayoría de las citas del Antiguo Testamento en los escritos apostólicos se basan en esta traducción griega, que era el idioma franco de la época.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Fue la Biblia usada por los autores del Nuevo Testamento y leída por los primeros creyentes.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La mayoría de las citas del Antiguo Testamento en los escritos apostólicos se basan en esta traducción griega, que era el idioma franco de la época.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="La Septuaginta es una traducción al griego, mientras que las versiones latinas surgieron posteriormente como el Latín Viejo o la Vulgata.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Representa la primera traducción completa de las Escrituras al latín eclesiástico.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Septuaginta es una traducción al griego, mientras que las versiones latinas surgieron posteriormente como el Latín Viejo o la Vulgata.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="2">
+          <div class="q-header">
+            <span class="q-number">Pregunta 3</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Cuál fue la principal motivación de San Jerónimo al producir la Vulgata Latina en el siglo IV?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Reflexione sobre el significado del nombre de esta versión y la fuente que Jerónimo consultó para el Antiguo Testamento.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="El nombre 'Vulgata' implica precisamente que el objetivo era una versión 'común' y accesible para el pueblo de habla latina.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Crear una Biblia en un lenguaje técnico accesible únicamente para el clero académico.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El nombre 'Vulgata' implica precisamente que el objetivo era una versión 'común' y accesible para el pueblo de habla latina.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Aunque comenzó revisando los evangelios, su obra se extendió a toda la Biblia para ofrecer un canon latino completo.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Traducir exclusivamente los evangelios para simplificar la liturgia romana.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque comenzó revisando los evangelios, su obra se extendió a toda la Biblia para ofrecer un canon latino completo.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Su enfoque no era puramente estético o político, sino una necesidad de fidelidad textual frente a las corrupciones del Latín Viejo.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Reemplazar el uso del griego por una paráfrasis elegante que agradara a la corte imperial.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Su enfoque no era puramente estético o político, sino una necesidad de fidelidad textual frente a las corrupciones del Latín Viejo.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="Jerónimo buscó unificar las diversas versiones latinas existentes y reconoció la importancia de la 'Hebraica Veritas' para una traducción precisa.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Proveer una revisión fidedigna y común en latín, recurriendo finalmente al hebreo original para el Antiguo Testamento.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Jerónimo buscó unificar las diversas versiones latinas existentes y reconoció la importancia de la 'Hebraica Veritas' para una traducción precisa.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="3">
+          <div class="q-header">
+            <span class="q-number">Pregunta 4</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿En qué aspecto técnico fundamental se diferenció el Nuevo Testamento de Guillermo Tyndale (1526) de la Biblia de Wycliffe (1382)?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere la diferencia entre traducir de una traducción (latín) versus traducir de la lengua original (griego).</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La Biblia de Wycliffe fue copiada a mano casi un siglo antes de la invención de la imprenta de Gutenberg.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Wycliffe utilizó la imprenta de tipos móviles para difundir su obra más rápidamente.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Biblia de Wycliffe fue copiada a mano casi un siglo antes de la invención de la imprenta de Gutenberg.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Tyndale fue perseguido precisamente por sus posturas reformistas y su oposición a la centralización del poder eclesiástico sobre la Palabra.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Tyndale incluyó notas marginales que favorecían la autoridad papal en Inglaterra.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Tyndale fue perseguido precisamente por sus posturas reformistas y su oposición a la centralización del poder eclesiástico sobre la Palabra.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="Wycliffe dependió de la traducción latina de Jerónimo, mientras que Tyndale aprovechó el renacimiento del estudio del griego para ir a las fuentes primarias.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Tyndale tradujo directamente del griego original, mientras que Wycliffe lo hizo de la Vulgata Latina.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Wycliffe dependió de la traducción latina de Jerónimo, mientras que Tyndale aprovechó el renacimiento del estudio del griego para ir a las fuentes primarias.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="La división en versículos no apareció en las Biblias inglesas hasta la Biblia de Ginebra en 1560.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">La versión de Wycliffe fue la primera en utilizar la división moderna por versículos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La división en versículos no apareció en las Biblias inglesas hasta la Biblia de Ginebra en 1560.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="4">
+          <div class="q-header">
+            <span class="q-number">Pregunta 5</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Cuál es el propósito central de la &quot;Revisión de 1960&quot; de la versión Reina-Valera?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Enfoque su respuesta en la evolución del idioma castellano a través de los siglos.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La revisión se limita a cambios de lenguaje y ortografía, no a la modificación de las posturas teológicas del traductor original.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Cambiar la estructura doctrinal original de Casiodoro de Reina para modernizarla.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La revisión se limita a cambios de lenguaje y ortografía, no a la modificación de las posturas teológicas del traductor original.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La Reina-Valera se enorgullece de su base en los originales hebreo y griego, y la revisión de 1960 mantiene este compromiso.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Realizar una nueva traducción basada exclusivamente en el texto de la Vulgata Latina.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Reina-Valera se enorgullece de su base en los originales hebreo y griego, y la revisión de 1960 mantiene este compromiso.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="El objetivo fue eliminar arcaísmos que dificultaban la comprensión moderna, preservando la belleza literaria y la base textual de Reina y Valera.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Actualizar vocablos en desuso para mantener la claridad del mensaje sin perder la fidelidad a los originales.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El objetivo fue eliminar arcaísmos que dificultaban la comprensión moderna, preservando la belleza literaria y la base textual de Reina y Valera.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Esta revisión mantiene el canon protestante de 66 libros, centrada en la claridad lingüística para las iglesias evangélicas.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Incorporar los libros apócrifos para alinearse con el canon de la Iglesia Católica.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Esta revisión mantiene el canon protestante de 66 libros, centrada en la claridad lingüística para las iglesias evangélicas.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="5">
+          <div class="q-header">
+            <span class="q-number">Pregunta 6</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">Indique si la siguiente afirmación es verdadera o falsa: La versión Peshito es una traducción importante al siríaco que se relaciona estrechamente con el dialecto arameo usado en tiempos de Cristo.</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Recuerde el origen geográfico y lingüístico de las iglesias que utilizaron esta versión 'sencilla'.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="El siríaco es una variante semítica muy cercana al arameo palestino, lo que otorga a la Peshito un gran valor para la transmisión del texto en Oriente.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Verdadero</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El siríaco es una variante semítica muy cercana al arameo palestino, lo que otorga a la Peshito un gran valor para la transmisión del texto en Oriente.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Contrario a ser falsa, la Peshito es fundamental en la historia de las traducciones orientales por su cercanía lingüística con el entorno de Jesús.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Falso</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Contrario a ser falsa, la Peshito es fundamental en la historia de las traducciones orientales por su cercanía lingüística con el entorno de Jesús.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="6">
+          <div class="q-header">
+            <span class="q-number">Pregunta 7</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">Indique si la siguiente afirmación es verdadera o falsa: Casiodoro de Reina tradujo la primera Biblia completa al castellano (1569) basándose únicamente en la Vulgata Latina.</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere por qué se le llama la 'Biblia del Oso' y cuál era el ideal de los traductores de la Reforma.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="La gran hazaña de Reina fue traducir directamente de los textos originales en hebreo y griego, lo que la distinguió de las versiones medievales basadas en el latín.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Falso</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La gran hazaña de Reina fue traducir directamente de los textos originales en hebreo y griego, lo que la distinguió de las versiones medievales basadas en el latín.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Esta afirmación es incorrecta porque la versión de Reina es reconocida precisamente por saltarse la Vulgata y acudir a las fuentes originales.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Verdadero</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Esta afirmación es incorrecta porque la versión de Reina es reconocida precisamente por saltarse la Vulgata y acudir a las fuentes originales.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="7">
+          <div class="q-header">
+            <span class="q-number">Pregunta 8</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Qué suceso histórico del siglo XV fue determinante para el renacimiento del estudio del griego y el surgimiento de nuevas traducciones bíblicas?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en un evento que forzó a los sabios del Imperio Bizantino a desplazarse hacia Europa Occidental.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Este evento ocurrió en el siglo XVI (1517) y fue una consecuencia, más que la causa inicial, del acceso a las lenguas originales.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">La publicación de las 95 tesis por Martín Lutero.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Este evento ocurrió en el siglo XVI (1517) y fue una consecuencia, más que la causa inicial, del acceso a las lenguas originales.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Este fue un acuerdo político y territorial que no tuvo influencia en el ámbito de la crítica textual o la traducción bíblica.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">La firma del Tratado de Tordesillas.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Este fue un acuerdo político y territorial que no tuvo influencia en el ámbito de la crítica textual o la traducción bíblica.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="La huida de eruditos griegos hacia Italia con sus manuscritos antiguos proveyó el material necesario para que Occidente redescubriera el griego original.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">La caída de Constantinopla en manos de los turcos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La huida de eruditos griegos hacia Italia con sus manuscritos antiguos proveyó el material necesario para que Occidente redescubriera el griego original.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Aunque fue un suceso clave del siglo XV, su impacto fue geográfico y misionero, no directamente relacionado con el acceso a manuscritos griegos.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">El descubrimiento de América por Cristóbal Colón.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque fue un suceso clave del siglo XV, su impacto fue geográfico y misionero, no directamente relacionado con el acceso a manuscritos griegos.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="8">
+          <div class="q-header">
+            <span class="q-number">Pregunta 9</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Por qué se afirma desde una perspectiva misionera que la traducción es un esfuerzo por hacer &quot;accesible&quot; la Palabra de Dios?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere el concepto de 'lengua materna' en la comunicación del evangelio.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La traducción busca fidelidad a los originales inspirados; no asume que los idiomas de origen contengan errores doctrinales.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Porque es la única forma de corregir los errores doctrinales que se encuentran en los idiomas originales.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La traducción busca fidelidad a los originales inspirados; no asume que los idiomas de origen contengan errores doctrinales.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="El propósito de la traducción es precisamente democratizar el acceso al texto, no restringirlo a una élite intelectual.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Porque garantiza que solo los expertos en idiomas puedan interpretar los misterios sagrados.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El propósito de la traducción es precisamente democratizar el acceso al texto, no restringirlo a una élite intelectual.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La traducción valora la diversidad de lenguas locales, adaptando el mensaje a la cultura receptora en lugar de imponer una lengua externa.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Porque ayuda a estandarizar todas las culturas bajo una única lengua litúrgica universal.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La traducción valora la diversidad de lenguas locales, adaptando el mensaje a la cultura receptora en lugar de imponer una lengua externa.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="La traducción elimina la barrera lingüística, permitiendo que la revelación divina llegue al corazón del individuo sin depender de idiomas extranjeros.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Porque permite que el mensaje redentor sea comprendido por cada pueblo en su propia lengua vernácula.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La traducción elimina la barrera lingüística, permitiendo que la revelación divina llegue al corazón del individuo sin depender de idiomas extranjeros.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="9">
+          <div class="q-header">
+            <span class="q-number">Pregunta 10</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿De qué manera el sacrificio de traductores como Tyndale o Reina ilustra la naturaleza &quot;divino-humana&quot; de las Escrituras?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Relacione la participación activa de los traductores con la soberanía de Dios en querer ser conocido.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La teología del Seminario enseña que Dios es la causa primaria; el esfuerzo humano es instrumental y dependiente de la soberanía divina.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Prueba que el esfuerzo humano por traducir es más importante que la inspiración divina original.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La teología del Seminario enseña que Dios es la causa primaria; el esfuerzo humano es instrumental y dependiente de la soberanía divina.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="El deseo de Dios es la comunicación clara y abierta, no una sabiduría oculta para un grupo selecto de personas.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Sugiere que Dios prefiere una revelación secreta que solo los mártires pueden descifrar.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El deseo de Dios es la comunicación clara y abierta, no una sabiduría oculta para un grupo selecto de personas.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="Al igual que la inspiración utilizó a los autores originales, la preservación y traducción dependen de hombres que aportan su esfuerzo para que la Palabra sea 'viva'.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Demuestra que Dios utiliza instrumentos humanos y sus contextos lingüísticos para comunicar Su revelación infalible.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Al igual que la inspiración utilizó a los autores originales, la preservación y traducción dependen de hombres que aportan su esfuerzo para que la Palabra sea 'viva'.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Aunque el lenguaje se actualiza, el mensaje redentor se considera inmutable y de origen divino, no una creación humana sujeta a cambios doctrinales.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Indica que la Biblia es un libro puramente humano que debe ser reescrito por cada generación.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque el lenguaje se actualiza, el mensaje redentor se considera inmutable y de origen divino, no una creación humana sujeta a cambios doctrinales.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      </div>
+  <div class="results" id="results">
+    <h2>¡Cuestionario completado!</h2>
+    <div class="score" id="score">0%</div>
+    <div class="score-text" id="score-text"></div>
+    <button class="restart-btn" onclick="restart()">Intentar de nuevo</button>
+  </div>
+</div>
+<script>
+const quizData = [{"question":"¿Qué define técnicamente al término \"Versión\" dentro del estudio de las ciencias bíblicas?","hint":"Considere la raíz de la palabra y su relación con el cambio de un idioma a otro.","options":[{"label":"A","text":"Un comentario sistemático sobre el contexto histórico del Antiguo Testamento.","isCorrect":false,"rationale":"Un comentario analiza el texto ya existente, mientras que una versión es el resultado del traslado lingüístico del texto sagrado."},{"label":"B","text":"Cualquier traducción de la Biblia de sus idiomas originales a otra lengua.","isCorrect":true,"rationale":"Este término se aplica estrictamente al proceso de verter el contenido desde el hebreo, arameo o griego hacia idiomas diferentes para su comprensión."},{"label":"C","text":"Una interpretación personal de un pasaje bíblico realizada por un teólogo.","isCorrect":false,"rationale":"Este concepto se refiere más a la hermenéutica o exégesis que al proceso formal de traducción textual de los idiomas originales."},{"label":"D","text":"Una edición moderna de la Biblia que incluye exclusivamente notas al pie.","isCorrect":false,"rationale":"Las notas al pie son herramientas de estudio añadidas, pero no constituyen por sí mismas el acto de traducir el texto base."}]},{"question":"¿Cuál es la importancia fundamental de la Septuaginta ($LXX$) para el desarrollo del Nuevo Testamento?","hint":"Piense en qué idioma leían las Escrituras los cristianos de la Diáspora y los autores de los evangelios.","options":[{"label":"A","text":"Fue la versión que estableció definitivamente la exclusión de los libros apócrifos.","isCorrect":false,"rationale":"Por el contrario, la Septuaginta incluía libros que hoy se consideran apócrifos en el canon protestante, influyendo en su posterior difusión."},{"label":"B","text":"Contenía los manuscritos originales escritos por los propios apóstoles.","isCorrect":false,"rationale":"La Septuaginta se centra en el Antiguo Testamento y fue producida siglos antes del nacimiento de los apóstoles y la redacción del Nuevo Testamento."},{"label":"C","text":"Fue la Biblia usada por los autores del Nuevo Testamento y leída por los primeros creyentes.","isCorrect":true,"rationale":"La mayoría de las citas del Antiguo Testamento en los escritos apostólicos se basan en esta traducción griega, que era el idioma franco de la época."},{"label":"D","text":"Representa la primera traducción completa de las Escrituras al latín eclesiástico.","isCorrect":false,"rationale":"La Septuaginta es una traducción al griego, mientras que las versiones latinas surgieron posteriormente como el Latín Viejo o la Vulgata."}]},{"question":"¿Cuál fue la principal motivación de San Jerónimo al producir la Vulgata Latina en el siglo IV?","hint":"Reflexione sobre el significado del nombre de esta versión y la fuente que Jerónimo consultó para el Antiguo Testamento.","options":[{"label":"A","text":"Crear una Biblia en un lenguaje técnico accesible únicamente para el clero académico.","isCorrect":false,"rationale":"El nombre 'Vulgata' implica precisamente que el objetivo era una versión 'común' y accesible para el pueblo de habla latina."},{"label":"B","text":"Traducir exclusivamente los evangelios para simplificar la liturgia romana.","isCorrect":false,"rationale":"Aunque comenzó revisando los evangelios, su obra se extendió a toda la Biblia para ofrecer un canon latino completo."},{"label":"C","text":"Reemplazar el uso del griego por una paráfrasis elegante que agradara a la corte imperial.","isCorrect":false,"rationale":"Su enfoque no era puramente estético o político, sino una necesidad de fidelidad textual frente a las corrupciones del Latín Viejo."},{"label":"D","text":"Proveer una revisión fidedigna y común en latín, recurriendo finalmente al hebreo original para el Antiguo Testamento.","isCorrect":true,"rationale":"Jerónimo buscó unificar las diversas versiones latinas existentes y reconoció la importancia de la 'Hebraica Veritas' para una traducción precisa."}]},{"question":"¿En qué aspecto técnico fundamental se diferenció el Nuevo Testamento de Guillermo Tyndale (1526) de la Biblia de Wycliffe (1382)?","hint":"Considere la diferencia entre traducir de una traducción (latín) versus traducir de la lengua original (griego).","options":[{"label":"A","text":"Wycliffe utilizó la imprenta de tipos móviles para difundir su obra más rápidamente.","isCorrect":false,"rationale":"La Biblia de Wycliffe fue copiada a mano casi un siglo antes de la invención de la imprenta de Gutenberg."},{"label":"B","text":"Tyndale incluyó notas marginales que favorecían la autoridad papal en Inglaterra.","isCorrect":false,"rationale":"Tyndale fue perseguido precisamente por sus posturas reformistas y su oposición a la centralización del poder eclesiástico sobre la Palabra."},{"label":"C","text":"Tyndale tradujo directamente del griego original, mientras que Wycliffe lo hizo de la Vulgata Latina.","isCorrect":true,"rationale":"Wycliffe dependió de la traducción latina de Jerónimo, mientras que Tyndale aprovechó el renacimiento del estudio del griego para ir a las fuentes primarias."},{"label":"D","text":"La versión de Wycliffe fue la primera en utilizar la división moderna por versículos.","isCorrect":false,"rationale":"La división en versículos no apareció en las Biblias inglesas hasta la Biblia de Ginebra en 1560."}]},{"question":"¿Cuál es el propósito central de la \"Revisión de 1960\" de la versión Reina-Valera?","hint":"Enfoque su respuesta en la evolución del idioma castellano a través de los siglos.","options":[{"label":"A","text":"Cambiar la estructura doctrinal original de Casiodoro de Reina para modernizarla.","isCorrect":false,"rationale":"La revisión se limita a cambios de lenguaje y ortografía, no a la modificación de las posturas teológicas del traductor original."},{"label":"B","text":"Realizar una nueva traducción basada exclusivamente en el texto de la Vulgata Latina.","isCorrect":false,"rationale":"La Reina-Valera se enorgullece de su base en los originales hebreo y griego, y la revisión de 1960 mantiene este compromiso."},{"label":"C","text":"Actualizar vocablos en desuso para mantener la claridad del mensaje sin perder la fidelidad a los originales.","isCorrect":true,"rationale":"El objetivo fue eliminar arcaísmos que dificultaban la comprensión moderna, preservando la belleza literaria y la base textual de Reina y Valera."},{"label":"D","text":"Incorporar los libros apócrifos para alinearse con el canon de la Iglesia Católica.","isCorrect":false,"rationale":"Esta revisión mantiene el canon protestante de 66 libros, centrada en la claridad lingüística para las iglesias evangélicas."}]},{"question":"Indique si la siguiente afirmación es verdadera o falsa: La versión Peshito es una traducción importante al siríaco que se relaciona estrechamente con el dialecto arameo usado en tiempos de Cristo.","hint":"Recuerde el origen geográfico y lingüístico de las iglesias que utilizaron esta versión 'sencilla'.","options":[{"label":"A","text":"Verdadero","isCorrect":true,"rationale":"El siríaco es una variante semítica muy cercana al arameo palestino, lo que otorga a la Peshito un gran valor para la transmisión del texto en Oriente."},{"label":"B","text":"Falso","isCorrect":false,"rationale":"Contrario a ser falsa, la Peshito es fundamental en la historia de las traducciones orientales por su cercanía lingüística con el entorno de Jesús."}]},{"question":"Indique si la siguiente afirmación es verdadera o falsa: Casiodoro de Reina tradujo la primera Biblia completa al castellano (1569) basándose únicamente en la Vulgata Latina.","hint":"Considere por qué se le llama la 'Biblia del Oso' y cuál era el ideal de los traductores de la Reforma.","options":[{"label":"A","text":"Falso","isCorrect":true,"rationale":"La gran hazaña de Reina fue traducir directamente de los textos originales en hebreo y griego, lo que la distinguió de las versiones medievales basadas en el latín."},{"label":"B","text":"Verdadero","isCorrect":false,"rationale":"Esta afirmación es incorrecta porque la versión de Reina es reconocida precisamente por saltarse la Vulgata y acudir a las fuentes originales."}]},{"question":"¿Qué suceso histórico del siglo XV fue determinante para el renacimiento del estudio del griego y el surgimiento de nuevas traducciones bíblicas?","hint":"Piense en un evento que forzó a los sabios del Imperio Bizantino a desplazarse hacia Europa Occidental.","options":[{"label":"A","text":"La publicación de las 95 tesis por Martín Lutero.","isCorrect":false,"rationale":"Este evento ocurrió en el siglo XVI (1517) y fue una consecuencia, más que la causa inicial, del acceso a las lenguas originales."},{"label":"B","text":"La firma del Tratado de Tordesillas.","isCorrect":false,"rationale":"Este fue un acuerdo político y territorial que no tuvo influencia en el ámbito de la crítica textual o la traducción bíblica."},{"label":"C","text":"La caída de Constantinopla en manos de los turcos.","isCorrect":true,"rationale":"La huida de eruditos griegos hacia Italia con sus manuscritos antiguos proveyó el material necesario para que Occidente redescubriera el griego original."},{"label":"D","text":"El descubrimiento de América por Cristóbal Colón.","isCorrect":false,"rationale":"Aunque fue un suceso clave del siglo XV, su impacto fue geográfico y misionero, no directamente relacionado con el acceso a manuscritos griegos."}]},{"question":"¿Por qué se afirma desde una perspectiva misionera que la traducción es un esfuerzo por hacer \"accesible\" la Palabra de Dios?","hint":"Considere el concepto de 'lengua materna' en la comunicación del evangelio.","options":[{"label":"A","text":"Porque es la única forma de corregir los errores doctrinales que se encuentran en los idiomas originales.","isCorrect":false,"rationale":"La traducción busca fidelidad a los originales inspirados; no asume que los idiomas de origen contengan errores doctrinales."},{"label":"B","text":"Porque garantiza que solo los expertos en idiomas puedan interpretar los misterios sagrados.","isCorrect":false,"rationale":"El propósito de la traducción es precisamente democratizar el acceso al texto, no restringirlo a una élite intelectual."},{"label":"C","text":"Porque ayuda a estandarizar todas las culturas bajo una única lengua litúrgica universal.","isCorrect":false,"rationale":"La traducción valora la diversidad de lenguas locales, adaptando el mensaje a la cultura receptora en lugar de imponer una lengua externa."},{"label":"D","text":"Porque permite que el mensaje redentor sea comprendido por cada pueblo en su propia lengua vernácula.","isCorrect":true,"rationale":"La traducción elimina la barrera lingüística, permitiendo que la revelación divina llegue al corazón del individuo sin depender de idiomas extranjeros."}]},{"question":"¿De qué manera el sacrificio de traductores como Tyndale o Reina ilustra la naturaleza \"divino-humana\" de las Escrituras?","hint":"Relacione la participación activa de los traductores con la soberanía de Dios en querer ser conocido.","options":[{"label":"A","text":"Prueba que el esfuerzo humano por traducir es más importante que la inspiración divina original.","isCorrect":false,"rationale":"La teología del Seminario enseña que Dios es la causa primaria; el esfuerzo humano es instrumental y dependiente de la soberanía divina."},{"label":"B","text":"Sugiere que Dios prefiere una revelación secreta que solo los mártires pueden descifrar.","isCorrect":false,"rationale":"El deseo de Dios es la comunicación clara y abierta, no una sabiduría oculta para un grupo selecto de personas."},{"label":"C","text":"Demuestra que Dios utiliza instrumentos humanos y sus contextos lingüísticos para comunicar Su revelación infalible.","isCorrect":true,"rationale":"Al igual que la inspiración utilizó a los autores originales, la preservación y traducción dependen de hombres que aportan su esfuerzo para que la Palabra sea 'viva'."},{"label":"D","text":"Indica que la Biblia es un libro puramente humano que debe ser reescrito por cada generación.","isCorrect":false,"rationale":"Aunque el lenguaje se actualiza, el mensaje redentor se considera inmutable y de origen divino, no una creación humana sujeta a cambios doctrinales."}]}];
+const tr = {"correct":"¡Correcto!","incorrect":"Incorrecto","next":"Siguiente pregunta →","seeResults":"Ver resultados","complete":"¡Cuestionario completado!","scoreText":"Obtuviste {correct} de {total} correctas","tryAgain":"Intentar de nuevo","rightAnswer":"Respuesta correcta","notQuite":"No del todo"};
+let currentQ = 0, correctCount = 0, answered = false;
+
+function init() {
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === 0));
+  updateProgress();
+  document.querySelectorAll('.option').forEach(opt => opt.addEventListener('click', () => selectOption(opt)));
+  document.querySelectorAll('.next-btn').forEach(btn => btn.addEventListener('click', nextQuestion));
+}
+
+function selectOption(opt) {
+  if (answered) return;
+  answered = true;
+  const q = opt.closest('.question');
+  const options = q.querySelectorAll('.option');
+  const nextBtn = q.querySelector('.next-btn');
+  const isCorrect = opt.dataset.correct === 'true';
+  
+  // Mark all options as disabled
+  options.forEach(o => o.classList.add('disabled'));
+  
+  // Style selected option
+  opt.classList.add('selected', isCorrect ? 'correct' : 'incorrect');
+  
+  // Show correct answer if wrong
+  if (!isCorrect) {
+    const correctOpt = [...options].find(o => o.dataset.correct === 'true');
+    if (correctOpt) correctOpt.classList.add('show-correct');
+  }
+  
+  if (isCorrect) correctCount++;
+  
+  // Show feedback for ALL options that have rationale
+  options.forEach(o => {
+    const wrapper = o.closest('.option-wrapper');
+    const feedback = wrapper.querySelector('.option-feedback');
+    const rationale = o.dataset.rationale;
+    const isThisCorrect = o.dataset.correct === 'true';
+    
+    if (rationale && rationale.trim()) {
+      feedback.classList.remove('hidden');
+      feedback.classList.add(isThisCorrect ? 'correct-feedback' : 'incorrect-feedback');
+      
+      const statusEl = feedback.querySelector('.feedback-status');
+      statusEl.className = 'feedback-status ' + (isThisCorrect ? 'correct' : 'incorrect');
+      statusEl.innerHTML = isThisCorrect 
+        ? '✓ ' + tr.rightAnswer
+        : '✗ ' + tr.notQuite;
+    }
+  });
+  
+  nextBtn.classList.remove('hidden');
+  if (currentQ === quizData.length - 1) nextBtn.textContent = tr.seeResults;
+}
+
+function nextQuestion() {
+  answered = false;
+  currentQ++;
+  if (currentQ >= quizData.length) { showResults(); return; }
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === currentQ));
+  updateProgress();
+}
+
+function updateProgress() {
+  document.querySelector('.progress-fill').style.width = (currentQ / quizData.length * 100) + '%';
+}
+
+function showResults() {
+  document.querySelectorAll('.question').forEach(q => q.classList.remove('active'));
+  document.getElementById('results').classList.add('active');
+  const pct = Math.round((correctCount / quizData.length) * 100);
+  document.getElementById('score').textContent = pct + '%';
+  document.getElementById('score-text').textContent = tr.scoreText.replace('{correct}', correctCount).replace('{total}', quizData.length);
+  document.querySelector('.progress-fill').style.width = '100%';
+}
+
+function restart() {
+  currentQ = 0; correctCount = 0; answered = false;
+  document.getElementById('results').classList.remove('active');
+  document.querySelectorAll('.question').forEach((q, i) => {
+    q.classList.toggle('active', i === 0);
+    q.querySelectorAll('.option').forEach(o => o.classList.remove('selected', 'correct', 'incorrect', 'disabled', 'show-correct'));
+    q.querySelectorAll('.option-feedback').forEach(f => {
+      f.classList.add('hidden');
+      f.classList.remove('correct-feedback', 'incorrect-feedback');
+    });
+    const btn = q.querySelector('.next-btn');
+    btn.classList.add('hidden');
+    btn.textContent = tr.next;
+  });
+  updateProgress();
+}
+
+init();
+</script>
+</body>
+</html>

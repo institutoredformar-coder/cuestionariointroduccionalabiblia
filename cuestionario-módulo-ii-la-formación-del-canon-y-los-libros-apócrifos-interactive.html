@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Módulo II: La Formación del Canon y los Libros Apócrifos</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh; padding: 20px; color: #333;
+}
+.container { max-width: 700px; margin: 0 auto; }
+.header { text-align: center; color: #fff; padding: 30px 20px; }
+.header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.header .meta { font-size: 14px; opacity: 0.9; }
+.progress-bar { background: rgba(255,255,255,0.3); border-radius: 10px; height: 8px; margin: 20px 0; overflow: hidden; }
+.progress-fill { background: #fff; height: 100%; width: 0%; transition: width 0.4s ease; border-radius: 10px; }
+.question { background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: none; }
+.question.active { display: block; }
+.q-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; color: #888; }
+.q-number { font-weight: 600; color: #667eea; }
+.q-text { font-size: 18px; font-weight: 600; line-height: 1.5; margin-bottom: 25px; color: #222; }
+.options { display: flex; flex-direction: column; gap: 12px; }
+.option-wrapper { display: flex; flex-direction: column; }
+.option {
+  display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px;
+  border: 2px solid #e8e8e8; border-radius: 12px; background: #fafafa;
+  cursor: pointer; transition: all 0.2s; text-align: left; font-size: 15px; width: 100%;
+}
+[dir="rtl"] .option { text-align: right; flex-direction: row-reverse; }
+.option:hover:not(.disabled) { border-color: #667eea; background: #f5f3ff; }
+.option.selected { border-color: #667eea; background: #ede9fe; }
+.option.correct { border-color: #22c55e; background: #dcfce7; }
+.option.incorrect { border-color: #ef4444; background: #fee2e2; }
+.option.disabled { cursor: default; }
+.option.show-correct { border-color: #22c55e; background: #dcfce7; }
+.opt-label {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%; background: #e8e8e8;
+  font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+.option.selected .opt-label { background: #667eea; color: #fff; }
+.option.correct .opt-label { background: #22c55e; color: #fff; }
+.option.incorrect .opt-label { background: #ef4444; color: #fff; }
+.option.show-correct .opt-label { background: #22c55e; color: #fff; }
+.opt-text { padding-top: 5px; line-height: 1.5; }
+
+/* Individual option feedback */
+.option-feedback {
+  margin: 8px 0 4px 46px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+[dir="rtl"] .option-feedback { margin-left: 0; margin-right: 46px; }
+.option-feedback.correct-feedback {
+  background: #dcfce7;
+  border-left: 3px solid #22c55e;
+}
+.option-feedback.incorrect-feedback {
+  background: #fef3f2;
+  border-left: 3px solid #fca5a5;
+}
+[dir="rtl"] .option-feedback.correct-feedback,
+[dir="rtl"] .option-feedback.incorrect-feedback {
+  border-left: none;
+  border-right: 3px solid;
+}
+[dir="rtl"] .option-feedback.correct-feedback { border-right-color: #22c55e; }
+[dir="rtl"] .option-feedback.incorrect-feedback { border-right-color: #fca5a5; }
+.feedback-status {
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.feedback-status.correct { color: #166534; }
+.feedback-status.incorrect { color: #991b1b; }
+.feedback-rationale { color: #444; }
+
+/* Hint box */
+.hint-box {
+  margin: 12px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+}
+.hint-toggle {
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hint-toggle:hover { background: #fef3c7; }
+.hint-content {
+  padding: 0 16px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s, padding 0.3s;
+  font-size: 14px;
+  color: #78350f;
+  line-height: 1.5;
+}
+.hint-box.show .hint-content {
+  padding: 0 16px 12px;
+  max-height: 200px;
+}
+
+.next-btn {
+  margin-top: 20px; width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none;
+  border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.next-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
+.hidden { display: none !important; }
+.results { background: #fff; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: none; }
+.results.active { display: block; }
+.results h2 { font-size: 28px; margin-bottom: 10px; color: #333; }
+.results .score { font-size: 64px; font-weight: 700; color: #667eea; margin: 20px 0; }
+.results .score-text { font-size: 18px; color: #666; margin-bottom: 30px; }
+.restart-btn {
+  padding: 14px 40px; background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+
+/* Math CSS */
+.math, .math-block { font-family: "Cambria Math", "Times New Roman", Times, serif; font-style: italic; }
+.math-block { display: block; text-align: center; margin: 10px 0; font-size: 110%; }
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 3px; font-size: 0.9em; }
+.frac-num { border-bottom: 1px solid currentColor; padding: 0 4px 2px; line-height: 1.2; }
+.frac-den { padding: 2px 4px 0; line-height: 1.2; }
+.sqrt { white-space: nowrap; }
+.sqrt-content { border-top: 1px solid currentColor; padding: 0 3px; margin-left: 2px; }
+sup, sub { font-size: 0.75em; }
+sup { vertical-align: super; }
+sub { vertical-align: sub; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Cuestionario - Módulo II: La Formación del Canon y los Libros Apócrifos</h1>
+    <div class="meta">12 preguntas</div>
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+  </div>
+  <div id="quiz-container">
+        <div class="question" data-index="0">
+          <div class="q-header">
+            <span class="q-number">Pregunta 1</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">¿Cuál es el significado literal del término griego <span class="math">θεacuteoπνευστ oς</span> empleado en 2 Timoteo 3:16?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Relacione el término con el concepto de 'aliento' o 'exhalación' de una fuente divina.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Aunque el Espíritu Santo intervino, este término no se refiere al método de comunicación, sino a la esencia de su origen.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Dictado por el Espíritu</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque el Espíritu Santo intervino, este término no se refiere al método de comunicación, sino a la esencia de su origen.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La doctrina bíblica sostiene que Dios utilizó instrumentos humanos y no seres celestiales para la redacción de los textos.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Escrito por ángeles</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La doctrina bíblica sostiene que Dios utilizó instrumentos humanos y no seres celestiales para la redacción de los textos.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Este concepto sugiere un origen puramente humano o tradicional, lo cual contradice la naturaleza divina de la inspiración.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Sabiduría de los ancianos</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Este concepto sugiere un origen puramente humano o tradicional, lo cual contradice la naturaleza divina de la inspiración.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="El término enfatiza que la Escritura es el producto del aliento divino, exhalado por Dios e inhalado por los autores humanos.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Respirado por Dios</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El término enfatiza que la Escritura es el producto del aliento divino, exhalado por Dios e inhalado por los autores humanos.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="1">
+          <div class="q-header">
+            <span class="q-number">Pregunta 2</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">De acuerdo con el material de estudio, ¿cómo se describe la relación entre lo divino y lo humano en la Biblia?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en la comparación teológica que se hace entre la Palabra escrita y la Palabra encarnada.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="Así como Cristo es totalmente Dios y totalmente hombre, la Biblia combina la soberanía de la revelación de Dios con el contexto y estilo del autor humano.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Es un libro divino-humano, análogo a la naturaleza de Jesucristo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Así como Cristo es totalmente Dios y totalmente hombre, la Biblia combina la soberanía de la revelación de Dios con el contexto y estilo del autor humano.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="El material afirma la infalibilidad de la Biblia en materia religiosa, lo cual requiere una supervisión divina absoluta.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Es un libro humano que contiene ideas inspiradoras pero con errores religiosos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El material afirma la infalibilidad de la Biblia en materia religiosa, lo cual requiere una supervisión divina absoluta.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La inspiración ocurre en el momento de la redacción original, no es un estatus otorgado posteriormente por una institución.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Es un libro que comenzó siendo humano y fue santificado por la Iglesia siglos después.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La inspiración ocurre en el momento de la redacción original, no es un estatus otorgado posteriormente por una institución.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Esta visión ignora la participación activa, la personalidad y el estilo literario propio de los autores humanos mencionados en el texto.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Es un libro puramente divino donde el hombre solo fue una máquina de escribir.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Esta visión ignora la participación activa, la personalidad y el estilo literario propio de los autores humanos mencionados en el texto.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="2">
+          <div class="q-header">
+            <span class="q-number">Pregunta 3</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">¿Cuál de los siguientes criterios describe mejor la formación del Canon bíblico por parte de la Iglesia?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Diferencie entre la acción de 'otorgar' autoridad y la de 'identificar' una autoridad ya existente.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La dificultad del texto no fue un criterio de exclusión, sino su falta de coherencia doctrinal y origen divino.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">La Iglesia eliminó los libros que eran difíciles de entender para el pueblo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La dificultad del texto no fue un criterio de exclusión, sino su falta de coherencia doctrinal y origen divino.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Aunque el uso eclesiástico fue importante, la prueba fundamental era la evidencia de inspiración divina y apostolicidad.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">La Iglesia seleccionó los libros basándose únicamente en su popularidad literaria.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque el uso eclesiástico fue importante, la prueba fundamental era la evidencia de inspiración divina y apostolicidad.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La autoridad es intrínseca al origen inspirado del libro; la Iglesia solo tiene un papel de reconocimiento.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">La Iglesia creó la autoridad de los libros mediante decretos conciliares.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La autoridad es intrínseca al origen inspirado del libro; la Iglesia solo tiene un papel de reconocimiento.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="El proceso del canon no es de invención, sino de descubrimiento y validación de los libros que ya eran aceptados como Palabra de Dios.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">La Iglesia reconoció la autoridad que los libros ya poseían por su origen inspirado.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El proceso del canon no es de invención, sino de descubrimiento y validación de los libros que ya eran aceptados como Palabra de Dios.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="3">
+          <div class="q-header">
+            <span class="q-number">Pregunta 4</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">¿Qué factor histórico motivó a los líderes judíos a fijar oficialmente el canon hebreo en el Concilio de Jamnia (aprox. 90 d.C.)?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere las crisis de identidad del judaísmo en el primer siglo tras la caída de Jerusalén.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La Vulgata Latina fue un proyecto posterior del siglo IV y no fue una preocupación del liderazgo judío en Jamnia.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">La necesidad de traducir la Biblia al latín para el Imperio Romano.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Vulgata Latina fue un proyecto posterior del siglo IV y no fue una preocupación del liderazgo judío en Jamnia.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Estos rollos fueron descubiertos en 1947, no en la antigüedad.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">El descubrimiento fortuito de los Rollos del Mar Muerto.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Estos rollos fueron descubiertos en 1947, no en la antigüedad.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="Tras perder el centro de su culto, los judíos necesitaron definir sus límites sagrados frente al surgimiento del cristianismo.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">La destrucción del Templo en el año 70 d.C. y la expansión de los escritos cristianos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Tras perder el centro de su culto, los judíos necesitaron definir sus límites sagrados frente al surgimiento del cristianismo.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="El Concilio de Jamnia fue una reacción judía que, de hecho, buscaba excluir los escritos cristianos.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Una petición formal de los apóstoles para unificar las Escrituras.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El Concilio de Jamnia fue una reacción judía que, de hecho, buscaba excluir los escritos cristianos.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="4">
+          <div class="q-header">
+            <span class="q-number">Pregunta 5</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">¿Por qué la Iglesia protestante excluye los libros apócrifos de su canon del Antiguo Testamento?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Evalúe la coherencia entre estos libros y el canon hebreo original aceptado por Jesús.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Este tipo de contenido suele encontrarse en los apócrifos del Nuevo Testamento, no en los del Antiguo Testamento mencionados.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Porque son libros que hablan sobre la vida secreta de Jesús.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Este tipo de contenido suele encontrarse en los apócrifos del Nuevo Testamento, no en los del Antiguo Testamento mencionados.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Los libros apócrifos pertenecen al período intertestamentario y no tienen relación con la autoría apostólica.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Porque fueron escritos por los apóstoles del Nuevo Testamento.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Los libros apócrifos pertenecen al período intertestamentario y no tienen relación con la autoría apostólica.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Históricamente, fue la Iglesia Católica la que defendió su inclusión, mientras que los reformadores señalaron su falta de canonicidad.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Porque la Inquisición prohibió su lectura durante la Reforma.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Históricamente, fue la Iglesia Católica la que defendió su inclusión, mientras que los reformadores señalaron su falta de canonicidad.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="Estos libros presentan enseñanzas que contradicen el resto de la Escritura, como la idea de que la limosna expía el pecado.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Porque no forman parte de la Biblia hebrea y contienen inconsistencias doctrinales.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Estos libros presentan enseñanzas que contradicen el resto de la Escritura, como la idea de que la limosna expía el pecado.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="5">
+          <div class="q-header">
+            <span class="q-number">Pregunta 6</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">¿Qué importancia tuvo el descubrimiento de los Rollos del Mar Muerto en 1947 para la transmisión del texto bíblico?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en el concepto de 'fidelidad textual' a través de los siglos.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="Al comparar el texto de Isaías de Qumrán con el Texto Masorético posterior, la fidelidad de la copia resultó asombrosa.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Confirmaron que el texto hebreo se mantuvo prácticamente inalterado durante mil años.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Al comparar el texto de Isaías de Qumrán con el Texto Masorético posterior, la fidelidad de la copia resultó asombrosa.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Son copias antiguas y valiosas, pero no los documentos originales de puño y letra de los autores.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Proporcionaron los manuscritos originales (autógrafos) escritos por los profetas.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Son copias antiguas y valiosas, pero no los documentos originales de puño y letra de los autores.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Los hallazgos se centran principalmente en el Antiguo Testamento y no cambian el origen griego del Nuevo Testamento.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Demostraron que el Nuevo Testamento se escribió originalmente en hebreo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Los hallazgos se centran principalmente en el Antiguo Testamento y no cambian el origen griego del Nuevo Testamento.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="El descubrimiento probó lo contrario: la extrema conservación del mensaje original sin adiciones doctrinales.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Revelaron que los escribas judíos añadieron muchas doctrinas nuevas en la Edad Media.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El descubrimiento probó lo contrario: la extrema conservación del mensaje original sin adiciones doctrinales.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="6">
+          <div class="q-header">
+            <span class="q-number">Pregunta 7</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">¿Cuál fue el método utilizado por los masoretas para garantizar que no se añadiera ni quitara ni una sola letra al copiar las Escrituras?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Imagine un sistema de control de calidad basado en el conteo exhaustivo de caracteres.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Este enfoque violaría su compromiso con la preservación total e íntegra de la Palabra de Dios.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Solo copiaban los pasajes que ellos consideraban más importantes.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Este enfoque violaría su compromiso con la preservación total e íntegra de la Palabra de Dios.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La imprenta no se inventó hasta el siglo XV; los masoretas trabajaron entre los años 500 y 1000 d.C. de forma manual.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Utilizaron una imprenta primitiva para evitar errores manuales.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La imprenta no se inventó hasta el siglo XV; los masoretas trabajaron entre los años 500 y 1000 d.C. de forma manual.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Su labor principal era la preservación y estandarización del texto hebreo original, no su traducción múltiple.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Tradujeron el texto a varios idiomas simultáneamente para comparar.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Su labor principal era la preservación y estandarización del texto hebreo original, no su traducción múltiple.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="Incluso identificaron la letra central de cada libro para verificar la exactitud de la copia mediante estadísticas rigurosas.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Contaron meticulosamente el número de versículos, palabras y letras de cada libro.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Incluso identificaron la letra central de cada libro para verificar la exactitud de la copia mediante estadísticas rigurosas.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="7">
+          <div class="q-header">
+            <span class="q-number">Pregunta 8</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">¿Qué característica distingue a los manuscritos 'Unciales' de los 'Minúsculos' en el Nuevo Testamento?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere la forma de las letras y la cronología de su uso en la historia de la escritura.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="Los unciales son más antiguos (siglos IV-IX) y formales, mientras que los minúsculos (siglo IX en adelante) facilitaban una copia más rápida.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Los unciales usan letras mayúsculas grandes y los minúsculos usan letra cursiva pequeña.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Los unciales son más antiguos (siglos IV-IX) y formales, mientras que los minúsculos (siglo IX en adelante) facilitaban una copia más rápida.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Ambos son copias realizadas por escribas o monjes siglos después del tiempo de los apóstoles.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Los unciales fueron escritos por apóstoles y los minúsculos por monjes.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Ambos son copias realizadas por escribas o monjes siglos después del tiempo de los apóstoles.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La distinción principal radica en el estilo de caligrafía y la época, no necesariamente en el soporte físico único.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Los unciales están escritos en papiro y los minúsculos en piedra.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La distinción principal radica en el estilo de caligrafía y la época, no necesariamente en el soporte físico único.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Ambos tipos de manuscritos pueden contener cualquier parte del Nuevo Testamento.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Los unciales contienen solo los Evangelios y los minúsculos solo las Epístolas.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Ambos tipos de manuscritos pueden contener cualquier parte del Nuevo Testamento.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="8">
+          <div class="q-header">
+            <span class="q-number">Pregunta 9</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">¿Cuál es la importancia de la versión Septuaginta (LXX) para el estudio del Nuevo Testamento?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en el idioma que predominaba en el mundo mediterráneo durante el tiempo de los Apóstoles.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Al contrario, los cristianos la adoptaron con tal entusiasmo que los judíos sintieron la necesidad de hacer nuevas versiones.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Fue rechazada por los primeros cristianos por ser una obra judía.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Al contrario, los cristianos la adoptaron con tal entusiasmo que los judíos sintieron la necesidad de hacer nuevas versiones.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La Septuaginta es una traducción al griego, no al latín.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Fue la primera traducción al latín utilizada por San Jerónimo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Septuaginta es una traducción al griego, no al latín.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Es una traducción realizada entre los años 250 y 150 a.C., mucho después del tiempo de Moisés.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Contiene los únicos manuscritos originales escritos por Moisés.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Es una traducción realizada entre los años 250 y 150 a.C., mucho después del tiempo de Moisés.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="La mayoría de las citas del Antiguo Testamento en el Nuevo provienen de esta versión griega, influyendo en su terminología teológica.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Fue la Biblia utilizada por los autores del Nuevo Testamento y la Iglesia primitiva.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La mayoría de las citas del Antiguo Testamento en el Nuevo provienen de esta versión griega, influyendo en su terminología teológica.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="9">
+          <div class="q-header">
+            <span class="q-number">Pregunta 10</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">¿Cuál fue la meta principal de Guillermo Tyndale al traducir el Nuevo Testamento al inglés?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Recuerde su famoso desafío a un hombre que valoraba más las leyes del papa que las de Dios.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Su motivación era la fidelidad al mensaje bíblico y su comprensión popular, no una innovación lingüística formal.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Crear un nuevo idioma para la liturgia de la iglesia anglicana.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Su motivación era la fidelidad al mensaje bíblico y su comprensión popular, no una innovación lingüística formal.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Tyndale fue pionero en traducir del griego original, rompiendo con la dependencia de la versión en latín.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Traducir directamente de la Vulgata Latina para mantener la tradición.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Tyndale fue pionero en traducir del griego original, rompiendo con la dependencia de la versión en latín.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="Esta famosa declaración refleja su deseo de que la Palabra de Dios estuviera disponible para la gente común en su propia lengua.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Que el muchacho que guía el arado conociera las Escrituras mejor que los clérigos de su tiempo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Esta famosa declaración refleja su deseo de que la Palabra de Dios estuviera disponible para la gente común en su propia lengua.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Tyndale buscaba democratizar el acceso a la Biblia, no restringirlo a la élite académica.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Hacer una versión que solo los eruditos de Oxford pudieran entender.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Tyndale buscaba democratizar el acceso a la Biblia, no restringirlo a la élite académica.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="10">
+          <div class="q-header">
+            <span class="q-number">Pregunta 11</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">De acuerdo con el 'Módulo V: Propagación', ¿por qué se dice que la Biblia es el 'misionero sin limitaciones'?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere la capacidad de un libro para estar presente donde una persona no puede.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="El material sostiene que el mensaje de redención divina permanece inalterable a pesar del contexto cultural.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Porque su mensaje cambia según la cultura en la que se predica.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El material sostiene que el mensaje de redención divina permanece inalterable a pesar del contexto cultural.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La traducción requiere un esfuerzo humano enorme y sacrificado por parte de lingüistas y misioneros.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Porque es el único libro que se traduce automáticamente a otros idiomas.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La traducción requiere un esfuerzo humano enorme y sacrificado por parte de lingüistas y misioneros.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="La página impresa trasciende barreras políticas y geográficas, permitiendo que el mensaje llegue a lugares cerrados al personal misionero.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Porque puede viajar a través de las fronteras donde el predicador humano tiene prohibida la entrada.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La página impresa trasciende barreras políticas y geográficas, permitiendo que el mensaje llegue a lugares cerrados al personal misionero.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="La aplicación espiritual del material enfatiza que se necesita la ayuda sobrenatural del Espíritu para una comprensión verdadera.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Porque no requiere de la ayuda del Espíritu Santo para ser comprendida.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La aplicación espiritual del material enfatiza que se necesita la ayuda sobrenatural del Espíritu para una comprensión verdadera.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="11">
+          <div class="q-header">
+            <span class="q-number">Pregunta 12</span>
+            <span class="q-of">/ 12</span>
+          </div>
+          <div class="q-text">¿Qué enseñanza deja el proceso de formación y preservación del canon bíblico acerca del cuidado de Dios por su Palabra?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Relacione la preservación histórica con la intención salvífica de Dios.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La doctrina del canon implica una lista cerrada de libros que contienen la revelación completa y suficiente para la fe.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Que el canon aún está abierto y Dios sigue añadiendo libros hoy en día.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La doctrina del canon implica una lista cerrada de libros que contienen la revelación completa y suficiente para la fe.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="A pesar de persecuciones y errores de copistas, la integridad del mensaje se ha mantenido por el cuidado providencial de Dios.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Que la providencia de Dios ha garantizado una transmisión textual altamente fidedigna a través de los siglos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">A pesar de persecuciones y errores de copistas, la integridad del mensaje se ha mantenido por el cuidado providencial de Dios.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="El material enfatiza la providencia divina y no el azar en la guía de la Iglesia para reconocer los textos inspirados.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Que Dios dejó que el azar determinara qué libros sobrevivirían.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El material enfatiza la providencia divina y no el azar en la guía de la Iglesia para reconocer los textos inspirados.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Aunque es cierto que no tenemos los autógrafos, el enfoque del curso es la fiabilidad de las copias existentes gracias a Dios.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Que los manuscritos originales se perdieron para que el hombre no los idolatrara.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque es cierto que no tenemos los autógrafos, el enfoque del curso es la fiabilidad de las copias existentes gracias a Dios.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      </div>
+  <div class="results" id="results">
+    <h2>¡Cuestionario completado!</h2>
+    <div class="score" id="score">0%</div>
+    <div class="score-text" id="score-text"></div>
+    <button class="restart-btn" onclick="restart()">Intentar de nuevo</button>
+  </div>
+</div>
+<script>
+const quizData = [{"question":"¿Cuál es el significado literal del término griego $\\theta\\epsilon\\acute{o}\\pi\\nu\\epsilon\\upsilon\\sigma\\tau o\\varsigma$ empleado en 2 Timoteo 3:16?","hint":"Relacione el término con el concepto de 'aliento' o 'exhalación' de una fuente divina.","options":[{"label":"A","text":"Dictado por el Espíritu","isCorrect":false,"rationale":"Aunque el Espíritu Santo intervino, este término no se refiere al método de comunicación, sino a la esencia de su origen."},{"label":"B","text":"Escrito por ángeles","isCorrect":false,"rationale":"La doctrina bíblica sostiene que Dios utilizó instrumentos humanos y no seres celestiales para la redacción de los textos."},{"label":"C","text":"Sabiduría de los ancianos","isCorrect":false,"rationale":"Este concepto sugiere un origen puramente humano o tradicional, lo cual contradice la naturaleza divina de la inspiración."},{"label":"D","text":"Respirado por Dios","isCorrect":true,"rationale":"El término enfatiza que la Escritura es el producto del aliento divino, exhalado por Dios e inhalado por los autores humanos."}]},{"question":"De acuerdo con el material de estudio, ¿cómo se describe la relación entre lo divino y lo humano en la Biblia?","hint":"Piense en la comparación teológica que se hace entre la Palabra escrita y la Palabra encarnada.","options":[{"label":"A","text":"Es un libro divino-humano, análogo a la naturaleza de Jesucristo.","isCorrect":true,"rationale":"Así como Cristo es totalmente Dios y totalmente hombre, la Biblia combina la soberanía de la revelación de Dios con el contexto y estilo del autor humano."},{"label":"B","text":"Es un libro humano que contiene ideas inspiradoras pero con errores religiosos.","isCorrect":false,"rationale":"El material afirma la infalibilidad de la Biblia en materia religiosa, lo cual requiere una supervisión divina absoluta."},{"label":"C","text":"Es un libro que comenzó siendo humano y fue santificado por la Iglesia siglos después.","isCorrect":false,"rationale":"La inspiración ocurre en el momento de la redacción original, no es un estatus otorgado posteriormente por una institución."},{"label":"D","text":"Es un libro puramente divino donde el hombre solo fue una máquina de escribir.","isCorrect":false,"rationale":"Esta visión ignora la participación activa, la personalidad y el estilo literario propio de los autores humanos mencionados en el texto."}]},{"question":"¿Cuál de los siguientes criterios describe mejor la formación del Canon bíblico por parte de la Iglesia?","hint":"Diferencie entre la acción de 'otorgar' autoridad y la de 'identificar' una autoridad ya existente.","options":[{"label":"A","text":"La Iglesia eliminó los libros que eran difíciles de entender para el pueblo.","isCorrect":false,"rationale":"La dificultad del texto no fue un criterio de exclusión, sino su falta de coherencia doctrinal y origen divino."},{"label":"B","text":"La Iglesia seleccionó los libros basándose únicamente en su popularidad literaria.","isCorrect":false,"rationale":"Aunque el uso eclesiástico fue importante, la prueba fundamental era la evidencia de inspiración divina y apostolicidad."},{"label":"C","text":"La Iglesia creó la autoridad de los libros mediante decretos conciliares.","isCorrect":false,"rationale":"La autoridad es intrínseca al origen inspirado del libro; la Iglesia solo tiene un papel de reconocimiento."},{"label":"D","text":"La Iglesia reconoció la autoridad que los libros ya poseían por su origen inspirado.","isCorrect":true,"rationale":"El proceso del canon no es de invención, sino de descubrimiento y validación de los libros que ya eran aceptados como Palabra de Dios."}]},{"question":"¿Qué factor histórico motivó a los líderes judíos a fijar oficialmente el canon hebreo en el Concilio de Jamnia (aprox. 90 d.C.)?","hint":"Considere las crisis de identidad del judaísmo en el primer siglo tras la caída de Jerusalén.","options":[{"label":"A","text":"La necesidad de traducir la Biblia al latín para el Imperio Romano.","isCorrect":false,"rationale":"La Vulgata Latina fue un proyecto posterior del siglo IV y no fue una preocupación del liderazgo judío en Jamnia."},{"label":"B","text":"El descubrimiento fortuito de los Rollos del Mar Muerto.","isCorrect":false,"rationale":"Estos rollos fueron descubiertos en 1947, no en la antigüedad."},{"label":"C","text":"La destrucción del Templo en el año 70 d.C. y la expansión de los escritos cristianos.","isCorrect":true,"rationale":"Tras perder el centro de su culto, los judíos necesitaron definir sus límites sagrados frente al surgimiento del cristianismo."},{"label":"D","text":"Una petición formal de los apóstoles para unificar las Escrituras.","isCorrect":false,"rationale":"El Concilio de Jamnia fue una reacción judía que, de hecho, buscaba excluir los escritos cristianos."}]},{"question":"¿Por qué la Iglesia protestante excluye los libros apócrifos de su canon del Antiguo Testamento?","hint":"Evalúe la coherencia entre estos libros y el canon hebreo original aceptado por Jesús.","options":[{"label":"A","text":"Porque son libros que hablan sobre la vida secreta de Jesús.","isCorrect":false,"rationale":"Este tipo de contenido suele encontrarse en los apócrifos del Nuevo Testamento, no en los del Antiguo Testamento mencionados."},{"label":"B","text":"Porque fueron escritos por los apóstoles del Nuevo Testamento.","isCorrect":false,"rationale":"Los libros apócrifos pertenecen al período intertestamentario y no tienen relación con la autoría apostólica."},{"label":"C","text":"Porque la Inquisición prohibió su lectura durante la Reforma.","isCorrect":false,"rationale":"Históricamente, fue la Iglesia Católica la que defendió su inclusión, mientras que los reformadores señalaron su falta de canonicidad."},{"label":"D","text":"Porque no forman parte de la Biblia hebrea y contienen inconsistencias doctrinales.","isCorrect":true,"rationale":"Estos libros presentan enseñanzas que contradicen el resto de la Escritura, como la idea de que la limosna expía el pecado."}]},{"question":"¿Qué importancia tuvo el descubrimiento de los Rollos del Mar Muerto en 1947 para la transmisión del texto bíblico?","hint":"Piense en el concepto de 'fidelidad textual' a través de los siglos.","options":[{"label":"A","text":"Confirmaron que el texto hebreo se mantuvo prácticamente inalterado durante mil años.","isCorrect":true,"rationale":"Al comparar el texto de Isaías de Qumrán con el Texto Masorético posterior, la fidelidad de la copia resultó asombrosa."},{"label":"B","text":"Proporcionaron los manuscritos originales (autógrafos) escritos por los profetas.","isCorrect":false,"rationale":"Son copias antiguas y valiosas, pero no los documentos originales de puño y letra de los autores."},{"label":"C","text":"Demostraron que el Nuevo Testamento se escribió originalmente en hebreo.","isCorrect":false,"rationale":"Los hallazgos se centran principalmente en el Antiguo Testamento y no cambian el origen griego del Nuevo Testamento."},{"label":"D","text":"Revelaron que los escribas judíos añadieron muchas doctrinas nuevas en la Edad Media.","isCorrect":false,"rationale":"El descubrimiento probó lo contrario: la extrema conservación del mensaje original sin adiciones doctrinales."}]},{"question":"¿Cuál fue el método utilizado por los masoretas para garantizar que no se añadiera ni quitara ni una sola letra al copiar las Escrituras?","hint":"Imagine un sistema de control de calidad basado en el conteo exhaustivo de caracteres.","options":[{"label":"A","text":"Solo copiaban los pasajes que ellos consideraban más importantes.","isCorrect":false,"rationale":"Este enfoque violaría su compromiso con la preservación total e íntegra de la Palabra de Dios."},{"label":"B","text":"Utilizaron una imprenta primitiva para evitar errores manuales.","isCorrect":false,"rationale":"La imprenta no se inventó hasta el siglo XV; los masoretas trabajaron entre los años 500 y 1000 d.C. de forma manual."},{"label":"C","text":"Tradujeron el texto a varios idiomas simultáneamente para comparar.","isCorrect":false,"rationale":"Su labor principal era la preservación y estandarización del texto hebreo original, no su traducción múltiple."},{"label":"D","text":"Contaron meticulosamente el número de versículos, palabras y letras de cada libro.","isCorrect":true,"rationale":"Incluso identificaron la letra central de cada libro para verificar la exactitud de la copia mediante estadísticas rigurosas."}]},{"question":"¿Qué característica distingue a los manuscritos 'Unciales' de los 'Minúsculos' en el Nuevo Testamento?","hint":"Considere la forma de las letras y la cronología de su uso en la historia de la escritura.","options":[{"label":"A","text":"Los unciales usan letras mayúsculas grandes y los minúsculos usan letra cursiva pequeña.","isCorrect":true,"rationale":"Los unciales son más antiguos (siglos IV-IX) y formales, mientras que los minúsculos (siglo IX en adelante) facilitaban una copia más rápida."},{"label":"B","text":"Los unciales fueron escritos por apóstoles y los minúsculos por monjes.","isCorrect":false,"rationale":"Ambos son copias realizadas por escribas o monjes siglos después del tiempo de los apóstoles."},{"label":"C","text":"Los unciales están escritos en papiro y los minúsculos en piedra.","isCorrect":false,"rationale":"La distinción principal radica en el estilo de caligrafía y la época, no necesariamente en el soporte físico único."},{"label":"D","text":"Los unciales contienen solo los Evangelios y los minúsculos solo las Epístolas.","isCorrect":false,"rationale":"Ambos tipos de manuscritos pueden contener cualquier parte del Nuevo Testamento."}]},{"question":"¿Cuál es la importancia de la versión Septuaginta (LXX) para el estudio del Nuevo Testamento?","hint":"Piense en el idioma que predominaba en el mundo mediterráneo durante el tiempo de los Apóstoles.","options":[{"label":"A","text":"Fue rechazada por los primeros cristianos por ser una obra judía.","isCorrect":false,"rationale":"Al contrario, los cristianos la adoptaron con tal entusiasmo que los judíos sintieron la necesidad de hacer nuevas versiones."},{"label":"B","text":"Fue la primera traducción al latín utilizada por San Jerónimo.","isCorrect":false,"rationale":"La Septuaginta es una traducción al griego, no al latín."},{"label":"C","text":"Contiene los únicos manuscritos originales escritos por Moisés.","isCorrect":false,"rationale":"Es una traducción realizada entre los años 250 y 150 a.C., mucho después del tiempo de Moisés."},{"label":"D","text":"Fue la Biblia utilizada por los autores del Nuevo Testamento y la Iglesia primitiva.","isCorrect":true,"rationale":"La mayoría de las citas del Antiguo Testamento en el Nuevo provienen de esta versión griega, influyendo en su terminología teológica."}]},{"question":"¿Cuál fue la meta principal de Guillermo Tyndale al traducir el Nuevo Testamento al inglés?","hint":"Recuerde su famoso desafío a un hombre que valoraba más las leyes del papa que las de Dios.","options":[{"label":"A","text":"Crear un nuevo idioma para la liturgia de la iglesia anglicana.","isCorrect":false,"rationale":"Su motivación era la fidelidad al mensaje bíblico y su comprensión popular, no una innovación lingüística formal."},{"label":"B","text":"Traducir directamente de la Vulgata Latina para mantener la tradición.","isCorrect":false,"rationale":"Tyndale fue pionero en traducir del griego original, rompiendo con la dependencia de la versión en latín."},{"label":"C","text":"Que el muchacho que guía el arado conociera las Escrituras mejor que los clérigos de su tiempo.","isCorrect":true,"rationale":"Esta famosa declaración refleja su deseo de que la Palabra de Dios estuviera disponible para la gente común en su propia lengua."},{"label":"D","text":"Hacer una versión que solo los eruditos de Oxford pudieran entender.","isCorrect":false,"rationale":"Tyndale buscaba democratizar el acceso a la Biblia, no restringirlo a la élite académica."}]},{"question":"De acuerdo con el 'Módulo V: Propagación', ¿por qué se dice que la Biblia es el 'misionero sin limitaciones'?","hint":"Considere la capacidad de un libro para estar presente donde una persona no puede.","options":[{"label":"A","text":"Porque su mensaje cambia según la cultura en la que se predica.","isCorrect":false,"rationale":"El material sostiene que el mensaje de redención divina permanece inalterable a pesar del contexto cultural."},{"label":"B","text":"Porque es el único libro que se traduce automáticamente a otros idiomas.","isCorrect":false,"rationale":"La traducción requiere un esfuerzo humano enorme y sacrificado por parte de lingüistas y misioneros."},{"label":"C","text":"Porque puede viajar a través de las fronteras donde el predicador humano tiene prohibida la entrada.","isCorrect":true,"rationale":"La página impresa trasciende barreras políticas y geográficas, permitiendo que el mensaje llegue a lugares cerrados al personal misionero."},{"label":"D","text":"Porque no requiere de la ayuda del Espíritu Santo para ser comprendida.","isCorrect":false,"rationale":"La aplicación espiritual del material enfatiza que se necesita la ayuda sobrenatural del Espíritu para una comprensión verdadera."}]},{"question":"¿Qué enseñanza deja el proceso de formación y preservación del canon bíblico acerca del cuidado de Dios por su Palabra?","hint":"Relacione la preservación histórica con la intención salvífica de Dios.","options":[{"label":"A","text":"Que el canon aún está abierto y Dios sigue añadiendo libros hoy en día.","isCorrect":false,"rationale":"La doctrina del canon implica una lista cerrada de libros que contienen la revelación completa y suficiente para la fe."},{"label":"B","text":"Que la providencia de Dios ha garantizado una transmisión textual altamente fidedigna a través de los siglos.","isCorrect":true,"rationale":"A pesar de persecuciones y errores de copistas, la integridad del mensaje se ha mantenido por el cuidado providencial de Dios."},{"label":"C","text":"Que Dios dejó que el azar determinara qué libros sobrevivirían.","isCorrect":false,"rationale":"El material enfatiza la providencia divina y no el azar en la guía de la Iglesia para reconocer los textos inspirados."},{"label":"D","text":"Que los manuscritos originales se perdieron para que el hombre no los idolatrara.","isCorrect":false,"rationale":"Aunque es cierto que no tenemos los autógrafos, el enfoque del curso es la fiabilidad de las copias existentes gracias a Dios."}]}];
+const tr = {"correct":"¡Correcto!","incorrect":"Incorrecto","next":"Siguiente pregunta →","seeResults":"Ver resultados","complete":"¡Cuestionario completado!","scoreText":"Obtuviste {correct} de {total} correctas","tryAgain":"Intentar de nuevo","rightAnswer":"Respuesta correcta","notQuite":"No del todo"};
+let currentQ = 0, correctCount = 0, answered = false;
+
+function init() {
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === 0));
+  updateProgress();
+  document.querySelectorAll('.option').forEach(opt => opt.addEventListener('click', () => selectOption(opt)));
+  document.querySelectorAll('.next-btn').forEach(btn => btn.addEventListener('click', nextQuestion));
+}
+
+function selectOption(opt) {
+  if (answered) return;
+  answered = true;
+  const q = opt.closest('.question');
+  const options = q.querySelectorAll('.option');
+  const nextBtn = q.querySelector('.next-btn');
+  const isCorrect = opt.dataset.correct === 'true';
+  
+  // Mark all options as disabled
+  options.forEach(o => o.classList.add('disabled'));
+  
+  // Style selected option
+  opt.classList.add('selected', isCorrect ? 'correct' : 'incorrect');
+  
+  // Show correct answer if wrong
+  if (!isCorrect) {
+    const correctOpt = [...options].find(o => o.dataset.correct === 'true');
+    if (correctOpt) correctOpt.classList.add('show-correct');
+  }
+  
+  if (isCorrect) correctCount++;
+  
+  // Show feedback for ALL options that have rationale
+  options.forEach(o => {
+    const wrapper = o.closest('.option-wrapper');
+    const feedback = wrapper.querySelector('.option-feedback');
+    const rationale = o.dataset.rationale;
+    const isThisCorrect = o.dataset.correct === 'true';
+    
+    if (rationale && rationale.trim()) {
+      feedback.classList.remove('hidden');
+      feedback.classList.add(isThisCorrect ? 'correct-feedback' : 'incorrect-feedback');
+      
+      const statusEl = feedback.querySelector('.feedback-status');
+      statusEl.className = 'feedback-status ' + (isThisCorrect ? 'correct' : 'incorrect');
+      statusEl.innerHTML = isThisCorrect 
+        ? '✓ ' + tr.rightAnswer
+        : '✗ ' + tr.notQuite;
+    }
+  });
+  
+  nextBtn.classList.remove('hidden');
+  if (currentQ === quizData.length - 1) nextBtn.textContent = tr.seeResults;
+}
+
+function nextQuestion() {
+  answered = false;
+  currentQ++;
+  if (currentQ >= quizData.length) { showResults(); return; }
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === currentQ));
+  updateProgress();
+}
+
+function updateProgress() {
+  document.querySelector('.progress-fill').style.width = (currentQ / quizData.length * 100) + '%';
+}
+
+function showResults() {
+  document.querySelectorAll('.question').forEach(q => q.classList.remove('active'));
+  document.getElementById('results').classList.add('active');
+  const pct = Math.round((correctCount / quizData.length) * 100);
+  document.getElementById('score').textContent = pct + '%';
+  document.getElementById('score-text').textContent = tr.scoreText.replace('{correct}', correctCount).replace('{total}', quizData.length);
+  document.querySelector('.progress-fill').style.width = '100%';
+}
+
+function restart() {
+  currentQ = 0; correctCount = 0; answered = false;
+  document.getElementById('results').classList.remove('active');
+  document.querySelectorAll('.question').forEach((q, i) => {
+    q.classList.toggle('active', i === 0);
+    q.querySelectorAll('.option').forEach(o => o.classList.remove('selected', 'correct', 'incorrect', 'disabled', 'show-correct'));
+    q.querySelectorAll('.option-feedback').forEach(f => {
+      f.classList.add('hidden');
+      f.classList.remove('correct-feedback', 'incorrect-feedback');
+    });
+    const btn = q.querySelector('.next-btn');
+    btn.classList.add('hidden');
+    btn.textContent = tr.next;
+  });
+  updateProgress();
+}
+
+init();
+</script>
+</body>
+</html>

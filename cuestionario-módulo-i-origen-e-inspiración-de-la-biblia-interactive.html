@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Módulo I: Origen e Inspiración de la Biblia</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh; padding: 20px; color: #333;
+}
+.container { max-width: 700px; margin: 0 auto; }
+.header { text-align: center; color: #fff; padding: 30px 20px; }
+.header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.header .meta { font-size: 14px; opacity: 0.9; }
+.progress-bar { background: rgba(255,255,255,0.3); border-radius: 10px; height: 8px; margin: 20px 0; overflow: hidden; }
+.progress-fill { background: #fff; height: 100%; width: 0%; transition: width 0.4s ease; border-radius: 10px; }
+.question { background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: none; }
+.question.active { display: block; }
+.q-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; color: #888; }
+.q-number { font-weight: 600; color: #667eea; }
+.q-text { font-size: 18px; font-weight: 600; line-height: 1.5; margin-bottom: 25px; color: #222; }
+.options { display: flex; flex-direction: column; gap: 12px; }
+.option-wrapper { display: flex; flex-direction: column; }
+.option {
+  display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px;
+  border: 2px solid #e8e8e8; border-radius: 12px; background: #fafafa;
+  cursor: pointer; transition: all 0.2s; text-align: left; font-size: 15px; width: 100%;
+}
+[dir="rtl"] .option { text-align: right; flex-direction: row-reverse; }
+.option:hover:not(.disabled) { border-color: #667eea; background: #f5f3ff; }
+.option.selected { border-color: #667eea; background: #ede9fe; }
+.option.correct { border-color: #22c55e; background: #dcfce7; }
+.option.incorrect { border-color: #ef4444; background: #fee2e2; }
+.option.disabled { cursor: default; }
+.option.show-correct { border-color: #22c55e; background: #dcfce7; }
+.opt-label {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%; background: #e8e8e8;
+  font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+.option.selected .opt-label { background: #667eea; color: #fff; }
+.option.correct .opt-label { background: #22c55e; color: #fff; }
+.option.incorrect .opt-label { background: #ef4444; color: #fff; }
+.option.show-correct .opt-label { background: #22c55e; color: #fff; }
+.opt-text { padding-top: 5px; line-height: 1.5; }
+
+/* Individual option feedback */
+.option-feedback {
+  margin: 8px 0 4px 46px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+[dir="rtl"] .option-feedback { margin-left: 0; margin-right: 46px; }
+.option-feedback.correct-feedback {
+  background: #dcfce7;
+  border-left: 3px solid #22c55e;
+}
+.option-feedback.incorrect-feedback {
+  background: #fef3f2;
+  border-left: 3px solid #fca5a5;
+}
+[dir="rtl"] .option-feedback.correct-feedback,
+[dir="rtl"] .option-feedback.incorrect-feedback {
+  border-left: none;
+  border-right: 3px solid;
+}
+[dir="rtl"] .option-feedback.correct-feedback { border-right-color: #22c55e; }
+[dir="rtl"] .option-feedback.incorrect-feedback { border-right-color: #fca5a5; }
+.feedback-status {
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.feedback-status.correct { color: #166534; }
+.feedback-status.incorrect { color: #991b1b; }
+.feedback-rationale { color: #444; }
+
+/* Hint box */
+.hint-box {
+  margin: 12px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+}
+.hint-toggle {
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hint-toggle:hover { background: #fef3c7; }
+.hint-content {
+  padding: 0 16px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s, padding 0.3s;
+  font-size: 14px;
+  color: #78350f;
+  line-height: 1.5;
+}
+.hint-box.show .hint-content {
+  padding: 0 16px 12px;
+  max-height: 200px;
+}
+
+.next-btn {
+  margin-top: 20px; width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none;
+  border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.next-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
+.hidden { display: none !important; }
+.results { background: #fff; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: none; }
+.results.active { display: block; }
+.results h2 { font-size: 28px; margin-bottom: 10px; color: #333; }
+.results .score { font-size: 64px; font-weight: 700; color: #667eea; margin: 20px 0; }
+.results .score-text { font-size: 18px; color: #666; margin-bottom: 30px; }
+.restart-btn {
+  padding: 14px 40px; background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+
+/* Math CSS */
+.math, .math-block { font-family: "Cambria Math", "Times New Roman", Times, serif; font-style: italic; }
+.math-block { display: block; text-align: center; margin: 10px 0; font-size: 110%; }
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 3px; font-size: 0.9em; }
+.frac-num { border-bottom: 1px solid currentColor; padding: 0 4px 2px; line-height: 1.2; }
+.frac-den { padding: 2px 4px 0; line-height: 1.2; }
+.sqrt { white-space: nowrap; }
+.sqrt-content { border-top: 1px solid currentColor; padding: 0 3px; margin-left: 2px; }
+sup, sub { font-size: 0.75em; }
+sup { vertical-align: super; }
+sub { vertical-align: sub; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Cuestionario - Módulo I: Origen e Inspiración de la Biblia</h1>
+    <div class="meta">10 preguntas</div>
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+  </div>
+  <div id="quiz-container">
+        <div class="question" data-index="0">
+          <div class="q-header">
+            <span class="q-number">Pregunta 1</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Qué significa etimológicamente el término griego <span class="math">textteopneustos</span> mencionado en 2 Timoteo 3:16?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en la relación entre el aliento divino y la mente de los autores humanos.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La fuente de la Escritura se distingue de la sabiduría secular por su origen directamente vinculado al Espíritu Santo.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Sabiduría del mundo</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La fuente de la Escritura se distingue de la sabiduría secular por su origen directamente vinculado al Espíritu Santo.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Este concepto sugeriría que la Biblia es solo un producto del genio humano, ignorando su causa primaria divina.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Inspiración humana</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Este concepto sugeriría que la Biblia es solo un producto del genio humano, ignorando su causa primaria divina.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="El término combina las palabras griegas para 'Dios' y 'respirar', indicando que la Escritura fue exhalada por la Deidad.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Respirado por Dios</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El término combina las palabras griegas para 'Dios' y 'respirar', indicando que la Escritura fue exhalada por la Deidad.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="La Biblia no presenta a ángeles como los autores generales, sino que enfatiza la exhalación de Dios a través de hombres.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Dictado angelical</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Biblia no presenta a ángeles como los autores generales, sino que enfatiza la exhalación de Dios a través de hombres.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="1">
+          <div class="q-header">
+            <span class="q-number">Pregunta 2</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">De acuerdo con la doctrina de la 'Inspiración Plenaria Dinámica', ¿cómo intervino Dios en la redacción de los textos?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere la colaboración entre la soberanía divina y la agencia humana activa.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La inspiración plenaria dinámica sostiene que la revelación es infalible en materia religiosa y está bajo la superintendencia divina.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Permitió que los autores cometieran errores históricos menores</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La inspiración plenaria dinámica sostiene que la revelación es infalible en materia religiosa y está bajo la superintendencia divina.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La inspiración se considera plenaria porque alcanza a todas las partes y palabras del texto para garantizar su autoridad.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Solo inspiró los pensamientos generales, no las palabras específicas</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La inspiración se considera plenaria porque alcanza a todas las partes y palabras del texto para garantizar su autoridad.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="El dictado mecánico anularía la personalidad y el estilo del autor humano, lo cual contradice la evidencia de la diversidad literaria en la Biblia.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Dictó cada palabra mecánicamente como a un secretario</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El dictado mecánico anularía la personalidad y el estilo del autor humano, lo cual contradice la evidencia de la diversidad literaria en la Biblia.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="Este modelo reconoce que Dios elevó el entendimiento de los autores para comunicar la verdad divina sin errores, usando sus propios estilos.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Supervisó a los autores respetando su personalidad y contexto cultural</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Este modelo reconoce que Dios elevó el entendimiento de los autores para comunicar la verdad divina sin errores, usando sus propios estilos.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="2">
+          <div class="q-header">
+            <span class="q-number">Pregunta 3</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">La Biblia es descrita como un libro 'divino-humano'. ¿Con qué otra figura teológica se compara esta naturaleza en el material de estudio?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Busque la relación entre la Palabra escrita y la Palabra encarnada.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="Así como Jesús es plenamente Dios y plenamente hombre, la Biblia tiene a Dios como causa primaria y al hombre como causa instrumental.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">La Persona de Jesucristo</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Así como Jesús es plenamente Dios y plenamente hombre, la Biblia tiene a Dios como causa primaria y al hombre como causa instrumental.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La Ley es considerada un caso excepcional de dictado directo, mientras que el resto de la Biblia refleja la integración de personalidades humanas.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Los Diez Mandamientos</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Ley es considerada un caso excepcional de dictado directo, mientras que el resto de la Biblia refleja la integración de personalidades humanas.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La analogía de Cristo es más precisa para explicar cómo la revelación infalible puede manifestarse a través de un medio humano.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">La institución de la Iglesia</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La analogía de Cristo es más precisa para explicar cómo la revelación infalible puede manifestarse a través de un medio humano.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Aunque la creación es obra de Dios, el material utiliza específicamente la naturaleza de Cristo para ilustrar la unión de lo divino y lo humano.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">La creación del mundo</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque la creación es obra de Dios, el material utiliza específicamente la naturaleza de Cristo para ilustrar la unión de lo divino y lo humano.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="3">
+          <div class="q-header">
+            <span class="q-number">Pregunta 4</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Cuál fue el propósito principal del entrenamiento de Moisés en la corte de Egipto para su futura labor como autor?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Reflexione sobre las habilidades académicas necesarias para redactar el Pentateuco.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Moisés abandonó su posición en palacio para identificarse con su pueblo, utilizando su educación para el beneficio espiritual de Israel.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Establecer alianzas políticas con el Faraón</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Moisés abandonó su posición en palacio para identificarse con su pueblo, utilizando su educación para el beneficio espiritual de Israel.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Aunque fue un líder militar, el enfoque del material es su preparación literaria para registrar las Sagradas Escrituras.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Aprender tácticas militares para la conquista</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque fue un líder militar, el enfoque del material es su preparación literaria para registrar las Sagradas Escrituras.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="Su educación como heredero al trono le proporcionó las herramientas lingüísticas y culturales necesarias para ser el primer escriba de Dios.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Instruirse en la mejor literatura y sabiduría de su época</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Su educación como heredero al trono le proporcionó las herramientas lingüísticas y culturales necesarias para ser el primer escriba de Dios.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Moisés rechazó la idolatría egipcia y su preparación se centró en la capacidad de preservar la revelación de Jehová.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Adoptar la religión egipcia para compararla con la hebrea</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Moisés rechazó la idolatría egipcia y su preparación se centró en la capacidad de preservar la revelación de Jehová.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="4">
+          <div class="q-header">
+            <span class="q-number">Pregunta 5</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">Según el teólogo Adam Clarke, ¿qué garantiza la 'inspiración de dirección o sugestión'?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Este concepto se enfoca en la confiabilidad del mensaje final más que en el método de transmisión.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="El enfoque de Clarke y de la materia es la autoridad en materia religiosa, no necesariamente en cada detalle de ciencia moderna.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">La infalibilidad científica de cada versículo</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El enfoque de Clarke y de la materia es la autoridad en materia religiosa, no necesariamente en cada detalle de ciencia moderna.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="Este tipo de inspiración asegura que el contenido sea verdadero y confiable, sin requerir una comunicación mecánica.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">La veracidad de lo que los autores escribieron</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Este tipo de inspiración asegura que el contenido sea verdadero y confiable, sin requerir una comunicación mecánica.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Clarke distingue específicamente que no insiste en el dictado verbal, sino en la dirección de la verdad escrita.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Que las palabras fueron dictadas verbalmente por el Espíritu</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Clarke distingue específicamente que no insiste en el dictado verbal, sino en la dirección de la verdad escrita.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="La inspiración de dirección permite que cada autor mantenga su estilo único mientras comunica la verdad divina.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">El estilo literario uniforme en toda la Biblia</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La inspiración de dirección permite que cada autor mantenga su estilo único mientras comunica la verdad divina.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="5">
+          <div class="q-header">
+            <span class="q-number">Pregunta 6</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿En qué área específica reclama la Biblia autoridad y suficiencia absoluta según el material del Seminario?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en el objetivo final de la redención divina.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Su autoridad es suprema dentro del ámbito de la fe cristiana y la moralidad, no como un sensor de literatura general.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">En la corrección de textos seculares contemporáneos</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Su autoridad es suprema dentro del ámbito de la fe cristiana y la moralidad, no como un sensor de literatura general.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La Biblia no pretende ser un tratado de química o biología, sino la revelación de la voluntad de Dios para el hombre.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">En todos los campos del conocimiento humano por igual</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Biblia no pretende ser un tratado de química o biología, sino la revelación de la voluntad de Dios para el hombre.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Las fechas antiguas pueden variar en arqueología, pero el mensaje de redención permanece inalterable y autoritativo.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">En la cronología exacta de las dinastías orientales</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Las fechas antiguas pueden variar en arqueología, pero el mensaje de redención permanece inalterable y autoritativo.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="La infalibilidad bíblica se vincula directamente con el propósito de Dios para la salvación y la vida del creyente.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">En la verdad religiosa y la regla de fe</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La infalibilidad bíblica se vincula directamente con el propósito de Dios para la salvación y la vida del creyente.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="6">
+          <div class="q-header">
+            <span class="q-number">Pregunta 7</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Qué implica el concepto de 'Inspiración Plenaria' respecto a la totalidad de las Escrituras?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">La palabra 'plenaria' proviene de una raíz que significa 'lleno' o 'completo'.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Esto ignoraría la inspiración de los Profetas y las Epístolas, fragmentando la unidad de la Palabra.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Solo los Evangelios tienen autoridad divina</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Esto ignoraría la inspiración de los Profetas y las Epístolas, fragmentando la unidad de la Palabra.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La inspiración es una propiedad intrínseca del texto debida a su origen divino, no una reacción subjetiva del hombre.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">La inspiración depende del impacto emocional en el lector</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La inspiración es una propiedad intrínseca del texto debida a su origen divino, no una reacción subjetiva del hombre.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La inspiración ocurrió durante el proceso de redacción original, garantizando la verdad desde su origen.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Dios corrigió los libros después de que fueron terminados</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La inspiración ocurrió durante el proceso de redacción original, garantizando la verdad desde su origen.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="La inspiración plenaria afirma que tanto las genealogías como los sermones están bajo la dirección del Espíritu Santo.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Todas las partes de la Biblia son igualmente inspiradas</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La inspiración plenaria afirma que tanto las genealogías como los sermones están bajo la dirección del Espíritu Santo.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="7">
+          <div class="q-header">
+            <span class="q-number">Pregunta 8</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Cuál es la 'causa primaria' de los libros bíblicos según la declaración de Santiago Arminio?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Busque el origen teológico fundamental por encima de las circunstancias humanas.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="Esta visión trinitaria coloca a la Deidad como el origen absoluto de la Palabra inspirada.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Dios, en su Hijo, a través del Espíritu Santo</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Esta visión trinitaria coloca a la Deidad como el origen absoluto de la Palabra inspirada.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Aunque la tradición oral fue un medio, Arminio identifica a Dios como la fuente última y originadora.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">La tradición oral de los ancianos</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque la tradición oral fue un medio, Arminio identifica a Dios como la fuente última y originadora.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Las necesidades históricas proveyeron el contexto, pero la causa primaria es la soberanía de Dios.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">La necesidad social de la nación de Israel</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Las necesidades históricas proveyeron el contexto, pero la causa primaria es la soberanía de Dios.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="El intelecto humano fue el instrumento, pero no la causa originaria de la revelación divina.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">El esfuerzo intelectual de los apóstoles</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El intelecto humano fue el instrumento, pero no la causa originaria de la revelación divina.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="8">
+          <div class="q-header">
+            <span class="q-number">Pregunta 9</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">Indique si la siguiente afirmación es verdadera o falsa: El dictado mecánico fue el método general que Dios utilizó para escribir la Biblia.</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Recuerde la distinción entre 'dictar' y 'elevar el entendimiento'.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="El material aclara que el dictado fue la excepción (como en la Ley); lo habitual fue el uso de las facultades de los autores.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Falso</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El material aclara que el dictado fue la excepción (como en la Ley); lo habitual fue el uso de las facultades de los autores.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Esta postura ignoraría el hecho de que Dios respetó la personalidad y el estilo literario de cada autor humano.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Verdadero</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Esta postura ignoraría el hecho de que Dios respetó la personalidad y el estilo literario de cada autor humano.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="9">
+          <div class="q-header">
+            <span class="q-number">Pregunta 10</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">Según Juan Wesley, ¿cuál es el papel del Espíritu Santo respecto a quienes leen la Biblia hoy?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere la conexión entre la inspiración original y la iluminación actual.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Wesley creía en la suficiencia de las Escrituras; el Espíritu no añade contenido nuevo, sino que ayuda a comprender el existente.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Inspira nuevas revelaciones que no están en el texto</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Wesley creía en la suficiencia de las Escrituras; el Espíritu no añade contenido nuevo, sino que ayuda a comprender el existente.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="El Espíritu que inspiró a los autores originales también asiste al creyente para que la Palabra sea viva y eficaz.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Ayuda sobrenaturalmente a quienes la leen con oración ferviente</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El Espíritu que inspiró a los autores originales también asiste al creyente para que la Palabra sea viva y eficaz.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La Biblia es intrínsecamente divina por su origen; la ayuda del Espíritu es para la iluminación del lector.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Convierte el texto humano en divino solo en el momento de la lectura</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Biblia es intrínsecamente divina por su origen; la ayuda del Espíritu es para la iluminación del lector.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Wesley enfatizaba la obra continua del Espíritu en la vida de oración y estudio del cristiano.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">El Espíritu solo actuó en el pasado y ya no interviene</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Wesley enfatizaba la obra continua del Espíritu en la vida de oración y estudio del cristiano.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      </div>
+  <div class="results" id="results">
+    <h2>¡Cuestionario completado!</h2>
+    <div class="score" id="score">0%</div>
+    <div class="score-text" id="score-text"></div>
+    <button class="restart-btn" onclick="restart()">Intentar de nuevo</button>
+  </div>
+</div>
+<script>
+const quizData = [{"question":"¿Qué significa etimológicamente el término griego $\\text{teopneustos}$ mencionado en 2 Timoteo 3:16?","hint":"Piense en la relación entre el aliento divino y la mente de los autores humanos.","options":[{"label":"A","text":"Sabiduría del mundo","isCorrect":false,"rationale":"La fuente de la Escritura se distingue de la sabiduría secular por su origen directamente vinculado al Espíritu Santo."},{"label":"B","text":"Inspiración humana","isCorrect":false,"rationale":"Este concepto sugeriría que la Biblia es solo un producto del genio humano, ignorando su causa primaria divina."},{"label":"C","text":"Respirado por Dios","isCorrect":true,"rationale":"El término combina las palabras griegas para 'Dios' y 'respirar', indicando que la Escritura fue exhalada por la Deidad."},{"label":"D","text":"Dictado angelical","isCorrect":false,"rationale":"La Biblia no presenta a ángeles como los autores generales, sino que enfatiza la exhalación de Dios a través de hombres."}]},{"question":"De acuerdo con la doctrina de la 'Inspiración Plenaria Dinámica', ¿cómo intervino Dios en la redacción de los textos?","hint":"Considere la colaboración entre la soberanía divina y la agencia humana activa.","options":[{"label":"A","text":"Permitió que los autores cometieran errores históricos menores","isCorrect":false,"rationale":"La inspiración plenaria dinámica sostiene que la revelación es infalible en materia religiosa y está bajo la superintendencia divina."},{"label":"B","text":"Solo inspiró los pensamientos generales, no las palabras específicas","isCorrect":false,"rationale":"La inspiración se considera plenaria porque alcanza a todas las partes y palabras del texto para garantizar su autoridad."},{"label":"C","text":"Dictó cada palabra mecánicamente como a un secretario","isCorrect":false,"rationale":"El dictado mecánico anularía la personalidad y el estilo del autor humano, lo cual contradice la evidencia de la diversidad literaria en la Biblia."},{"label":"D","text":"Supervisó a los autores respetando su personalidad y contexto cultural","isCorrect":true,"rationale":"Este modelo reconoce que Dios elevó el entendimiento de los autores para comunicar la verdad divina sin errores, usando sus propios estilos."}]},{"question":"La Biblia es descrita como un libro 'divino-humano'. ¿Con qué otra figura teológica se compara esta naturaleza en el material de estudio?","hint":"Busque la relación entre la Palabra escrita y la Palabra encarnada.","options":[{"label":"A","text":"La Persona de Jesucristo","isCorrect":true,"rationale":"Así como Jesús es plenamente Dios y plenamente hombre, la Biblia tiene a Dios como causa primaria y al hombre como causa instrumental."},{"label":"B","text":"Los Diez Mandamientos","isCorrect":false,"rationale":"La Ley es considerada un caso excepcional de dictado directo, mientras que el resto de la Biblia refleja la integración de personalidades humanas."},{"label":"C","text":"La institución de la Iglesia","isCorrect":false,"rationale":"La analogía de Cristo es más precisa para explicar cómo la revelación infalible puede manifestarse a través de un medio humano."},{"label":"D","text":"La creación del mundo","isCorrect":false,"rationale":"Aunque la creación es obra de Dios, el material utiliza específicamente la naturaleza de Cristo para ilustrar la unión de lo divino y lo humano."}]},{"question":"¿Cuál fue el propósito principal del entrenamiento de Moisés en la corte de Egipto para su futura labor como autor?","hint":"Reflexione sobre las habilidades académicas necesarias para redactar el Pentateuco.","options":[{"label":"A","text":"Establecer alianzas políticas con el Faraón","isCorrect":false,"rationale":"Moisés abandonó su posición en palacio para identificarse con su pueblo, utilizando su educación para el beneficio espiritual de Israel."},{"label":"B","text":"Aprender tácticas militares para la conquista","isCorrect":false,"rationale":"Aunque fue un líder militar, el enfoque del material es su preparación literaria para registrar las Sagradas Escrituras."},{"label":"C","text":"Instruirse en la mejor literatura y sabiduría de su época","isCorrect":true,"rationale":"Su educación como heredero al trono le proporcionó las herramientas lingüísticas y culturales necesarias para ser el primer escriba de Dios."},{"label":"D","text":"Adoptar la religión egipcia para compararla con la hebrea","isCorrect":false,"rationale":"Moisés rechazó la idolatría egipcia y su preparación se centró en la capacidad de preservar la revelación de Jehová."}]},{"question":"Según el teólogo Adam Clarke, ¿qué garantiza la 'inspiración de dirección o sugestión'?","hint":"Este concepto se enfoca en la confiabilidad del mensaje final más que en el método de transmisión.","options":[{"label":"A","text":"La infalibilidad científica de cada versículo","isCorrect":false,"rationale":"El enfoque de Clarke y de la materia es la autoridad en materia religiosa, no necesariamente en cada detalle de ciencia moderna."},{"label":"B","text":"La veracidad de lo que los autores escribieron","isCorrect":true,"rationale":"Este tipo de inspiración asegura que el contenido sea verdadero y confiable, sin requerir una comunicación mecánica."},{"label":"C","text":"Que las palabras fueron dictadas verbalmente por el Espíritu","isCorrect":false,"rationale":"Clarke distingue específicamente que no insiste en el dictado verbal, sino en la dirección de la verdad escrita."},{"label":"D","text":"El estilo literario uniforme en toda la Biblia","isCorrect":false,"rationale":"La inspiración de dirección permite que cada autor mantenga su estilo único mientras comunica la verdad divina."}]},{"question":"¿En qué área específica reclama la Biblia autoridad y suficiencia absoluta según el material del Seminario?","hint":"Piense en el objetivo final de la redención divina.","options":[{"label":"A","text":"En la corrección de textos seculares contemporáneos","isCorrect":false,"rationale":"Su autoridad es suprema dentro del ámbito de la fe cristiana y la moralidad, no como un sensor de literatura general."},{"label":"B","text":"En todos los campos del conocimiento humano por igual","isCorrect":false,"rationale":"La Biblia no pretende ser un tratado de química o biología, sino la revelación de la voluntad de Dios para el hombre."},{"label":"C","text":"En la cronología exacta de las dinastías orientales","isCorrect":false,"rationale":"Las fechas antiguas pueden variar en arqueología, pero el mensaje de redención permanece inalterable y autoritativo."},{"label":"D","text":"En la verdad religiosa y la regla de fe","isCorrect":true,"rationale":"La infalibilidad bíblica se vincula directamente con el propósito de Dios para la salvación y la vida del creyente."}]},{"question":"¿Qué implica el concepto de 'Inspiración Plenaria' respecto a la totalidad de las Escrituras?","hint":"La palabra 'plenaria' proviene de una raíz que significa 'lleno' o 'completo'.","options":[{"label":"A","text":"Solo los Evangelios tienen autoridad divina","isCorrect":false,"rationale":"Esto ignoraría la inspiración de los Profetas y las Epístolas, fragmentando la unidad de la Palabra."},{"label":"B","text":"La inspiración depende del impacto emocional en el lector","isCorrect":false,"rationale":"La inspiración es una propiedad intrínseca del texto debida a su origen divino, no una reacción subjetiva del hombre."},{"label":"C","text":"Dios corrigió los libros después de que fueron terminados","isCorrect":false,"rationale":"La inspiración ocurrió durante el proceso de redacción original, garantizando la verdad desde su origen."},{"label":"D","text":"Todas las partes de la Biblia son igualmente inspiradas","isCorrect":true,"rationale":"La inspiración plenaria afirma que tanto las genealogías como los sermones están bajo la dirección del Espíritu Santo."}]},{"question":"¿Cuál es la 'causa primaria' de los libros bíblicos según la declaración de Santiago Arminio?","hint":"Busque el origen teológico fundamental por encima de las circunstancias humanas.","options":[{"label":"A","text":"Dios, en su Hijo, a través del Espíritu Santo","isCorrect":true,"rationale":"Esta visión trinitaria coloca a la Deidad como el origen absoluto de la Palabra inspirada."},{"label":"B","text":"La tradición oral de los ancianos","isCorrect":false,"rationale":"Aunque la tradición oral fue un medio, Arminio identifica a Dios como la fuente última y originadora."},{"label":"C","text":"La necesidad social de la nación de Israel","isCorrect":false,"rationale":"Las necesidades históricas proveyeron el contexto, pero la causa primaria es la soberanía de Dios."},{"label":"D","text":"El esfuerzo intelectual de los apóstoles","isCorrect":false,"rationale":"El intelecto humano fue el instrumento, pero no la causa originaria de la revelación divina."}]},{"question":"Indique si la siguiente afirmación es verdadera o falsa: El dictado mecánico fue el método general que Dios utilizó para escribir la Biblia.","hint":"Recuerde la distinción entre 'dictar' y 'elevar el entendimiento'.","options":[{"label":"A","text":"Falso","isCorrect":true,"rationale":"El material aclara que el dictado fue la excepción (como en la Ley); lo habitual fue el uso de las facultades de los autores."},{"label":"B","text":"Verdadero","isCorrect":false,"rationale":"Esta postura ignoraría el hecho de que Dios respetó la personalidad y el estilo literario de cada autor humano."}]},{"question":"Según Juan Wesley, ¿cuál es el papel del Espíritu Santo respecto a quienes leen la Biblia hoy?","hint":"Considere la conexión entre la inspiración original y la iluminación actual.","options":[{"label":"A","text":"Inspira nuevas revelaciones que no están en el texto","isCorrect":false,"rationale":"Wesley creía en la suficiencia de las Escrituras; el Espíritu no añade contenido nuevo, sino que ayuda a comprender el existente."},{"label":"B","text":"Ayuda sobrenaturalmente a quienes la leen con oración ferviente","isCorrect":true,"rationale":"El Espíritu que inspiró a los autores originales también asiste al creyente para que la Palabra sea viva y eficaz."},{"label":"C","text":"Convierte el texto humano en divino solo en el momento de la lectura","isCorrect":false,"rationale":"La Biblia es intrínsecamente divina por su origen; la ayuda del Espíritu es para la iluminación del lector."},{"label":"D","text":"El Espíritu solo actuó en el pasado y ya no interviene","isCorrect":false,"rationale":"Wesley enfatizaba la obra continua del Espíritu en la vida de oración y estudio del cristiano."}]}];
+const tr = {"correct":"¡Correcto!","incorrect":"Incorrecto","next":"Siguiente pregunta →","seeResults":"Ver resultados","complete":"¡Cuestionario completado!","scoreText":"Obtuviste {correct} de {total} correctas","tryAgain":"Intentar de nuevo","rightAnswer":"Respuesta correcta","notQuite":"No del todo"};
+let currentQ = 0, correctCount = 0, answered = false;
+
+function init() {
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === 0));
+  updateProgress();
+  document.querySelectorAll('.option').forEach(opt => opt.addEventListener('click', () => selectOption(opt)));
+  document.querySelectorAll('.next-btn').forEach(btn => btn.addEventListener('click', nextQuestion));
+}
+
+function selectOption(opt) {
+  if (answered) return;
+  answered = true;
+  const q = opt.closest('.question');
+  const options = q.querySelectorAll('.option');
+  const nextBtn = q.querySelector('.next-btn');
+  const isCorrect = opt.dataset.correct === 'true';
+  
+  // Mark all options as disabled
+  options.forEach(o => o.classList.add('disabled'));
+  
+  // Style selected option
+  opt.classList.add('selected', isCorrect ? 'correct' : 'incorrect');
+  
+  // Show correct answer if wrong
+  if (!isCorrect) {
+    const correctOpt = [...options].find(o => o.dataset.correct === 'true');
+    if (correctOpt) correctOpt.classList.add('show-correct');
+  }
+  
+  if (isCorrect) correctCount++;
+  
+  // Show feedback for ALL options that have rationale
+  options.forEach(o => {
+    const wrapper = o.closest('.option-wrapper');
+    const feedback = wrapper.querySelector('.option-feedback');
+    const rationale = o.dataset.rationale;
+    const isThisCorrect = o.dataset.correct === 'true';
+    
+    if (rationale && rationale.trim()) {
+      feedback.classList.remove('hidden');
+      feedback.classList.add(isThisCorrect ? 'correct-feedback' : 'incorrect-feedback');
+      
+      const statusEl = feedback.querySelector('.feedback-status');
+      statusEl.className = 'feedback-status ' + (isThisCorrect ? 'correct' : 'incorrect');
+      statusEl.innerHTML = isThisCorrect 
+        ? '✓ ' + tr.rightAnswer
+        : '✗ ' + tr.notQuite;
+    }
+  });
+  
+  nextBtn.classList.remove('hidden');
+  if (currentQ === quizData.length - 1) nextBtn.textContent = tr.seeResults;
+}
+
+function nextQuestion() {
+  answered = false;
+  currentQ++;
+  if (currentQ >= quizData.length) { showResults(); return; }
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === currentQ));
+  updateProgress();
+}
+
+function updateProgress() {
+  document.querySelector('.progress-fill').style.width = (currentQ / quizData.length * 100) + '%';
+}
+
+function showResults() {
+  document.querySelectorAll('.question').forEach(q => q.classList.remove('active'));
+  document.getElementById('results').classList.add('active');
+  const pct = Math.round((correctCount / quizData.length) * 100);
+  document.getElementById('score').textContent = pct + '%';
+  document.getElementById('score-text').textContent = tr.scoreText.replace('{correct}', correctCount).replace('{total}', quizData.length);
+  document.querySelector('.progress-fill').style.width = '100%';
+}
+
+function restart() {
+  currentQ = 0; correctCount = 0; answered = false;
+  document.getElementById('results').classList.remove('active');
+  document.querySelectorAll('.question').forEach((q, i) => {
+    q.classList.toggle('active', i === 0);
+    q.querySelectorAll('.option').forEach(o => o.classList.remove('selected', 'correct', 'incorrect', 'disabled', 'show-correct'));
+    q.querySelectorAll('.option-feedback').forEach(f => {
+      f.classList.add('hidden');
+      f.classList.remove('correct-feedback', 'incorrect-feedback');
+    });
+    const btn = q.querySelector('.next-btn');
+    btn.classList.add('hidden');
+    btn.textContent = tr.next;
+  });
+  updateProgress();
+}
+
+init();
+</script>
+</body>
+</html>

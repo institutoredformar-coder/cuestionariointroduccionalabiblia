@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Módulo III: Transmisión y Preservación del Texto</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh; padding: 20px; color: #333;
+}
+.container { max-width: 700px; margin: 0 auto; }
+.header { text-align: center; color: #fff; padding: 30px 20px; }
+.header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.header .meta { font-size: 14px; opacity: 0.9; }
+.progress-bar { background: rgba(255,255,255,0.3); border-radius: 10px; height: 8px; margin: 20px 0; overflow: hidden; }
+.progress-fill { background: #fff; height: 100%; width: 0%; transition: width 0.4s ease; border-radius: 10px; }
+.question { background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: none; }
+.question.active { display: block; }
+.q-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; color: #888; }
+.q-number { font-weight: 600; color: #667eea; }
+.q-text { font-size: 18px; font-weight: 600; line-height: 1.5; margin-bottom: 25px; color: #222; }
+.options { display: flex; flex-direction: column; gap: 12px; }
+.option-wrapper { display: flex; flex-direction: column; }
+.option {
+  display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px;
+  border: 2px solid #e8e8e8; border-radius: 12px; background: #fafafa;
+  cursor: pointer; transition: all 0.2s; text-align: left; font-size: 15px; width: 100%;
+}
+[dir="rtl"] .option { text-align: right; flex-direction: row-reverse; }
+.option:hover:not(.disabled) { border-color: #667eea; background: #f5f3ff; }
+.option.selected { border-color: #667eea; background: #ede9fe; }
+.option.correct { border-color: #22c55e; background: #dcfce7; }
+.option.incorrect { border-color: #ef4444; background: #fee2e2; }
+.option.disabled { cursor: default; }
+.option.show-correct { border-color: #22c55e; background: #dcfce7; }
+.opt-label {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%; background: #e8e8e8;
+  font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+.option.selected .opt-label { background: #667eea; color: #fff; }
+.option.correct .opt-label { background: #22c55e; color: #fff; }
+.option.incorrect .opt-label { background: #ef4444; color: #fff; }
+.option.show-correct .opt-label { background: #22c55e; color: #fff; }
+.opt-text { padding-top: 5px; line-height: 1.5; }
+
+/* Individual option feedback */
+.option-feedback {
+  margin: 8px 0 4px 46px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+[dir="rtl"] .option-feedback { margin-left: 0; margin-right: 46px; }
+.option-feedback.correct-feedback {
+  background: #dcfce7;
+  border-left: 3px solid #22c55e;
+}
+.option-feedback.incorrect-feedback {
+  background: #fef3f2;
+  border-left: 3px solid #fca5a5;
+}
+[dir="rtl"] .option-feedback.correct-feedback,
+[dir="rtl"] .option-feedback.incorrect-feedback {
+  border-left: none;
+  border-right: 3px solid;
+}
+[dir="rtl"] .option-feedback.correct-feedback { border-right-color: #22c55e; }
+[dir="rtl"] .option-feedback.incorrect-feedback { border-right-color: #fca5a5; }
+.feedback-status {
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.feedback-status.correct { color: #166534; }
+.feedback-status.incorrect { color: #991b1b; }
+.feedback-rationale { color: #444; }
+
+/* Hint box */
+.hint-box {
+  margin: 12px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+}
+.hint-toggle {
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hint-toggle:hover { background: #fef3c7; }
+.hint-content {
+  padding: 0 16px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s, padding 0.3s;
+  font-size: 14px;
+  color: #78350f;
+  line-height: 1.5;
+}
+.hint-box.show .hint-content {
+  padding: 0 16px 12px;
+  max-height: 200px;
+}
+
+.next-btn {
+  margin-top: 20px; width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none;
+  border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.next-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
+.hidden { display: none !important; }
+.results { background: #fff; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: none; }
+.results.active { display: block; }
+.results h2 { font-size: 28px; margin-bottom: 10px; color: #333; }
+.results .score { font-size: 64px; font-weight: 700; color: #667eea; margin: 20px 0; }
+.results .score-text { font-size: 18px; color: #666; margin-bottom: 30px; }
+.restart-btn {
+  padding: 14px 40px; background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+
+/* Math CSS */
+.math, .math-block { font-family: "Cambria Math", "Times New Roman", Times, serif; font-style: italic; }
+.math-block { display: block; text-align: center; margin: 10px 0; font-size: 110%; }
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 3px; font-size: 0.9em; }
+.frac-num { border-bottom: 1px solid currentColor; padding: 0 4px 2px; line-height: 1.2; }
+.frac-den { padding: 2px 4px 0; line-height: 1.2; }
+.sqrt { white-space: nowrap; }
+.sqrt-content { border-top: 1px solid currentColor; padding: 0 3px; margin-left: 2px; }
+sup, sub { font-size: 0.75em; }
+sup { vertical-align: super; }
+sub { vertical-align: sub; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Cuestionario - Módulo III: Transmisión y Preservación del Texto</h1>
+    <div class="meta">10 questions</div>
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+  </div>
+  <div id="quiz-container">
+        <div class="question" data-index="0">
+          <div class="q-header">
+            <span class="q-number">Question 1</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Qué importancia fundamental tienen los Rollos del Mar Muerto descubiertos en 1947 para la confiabilidad del Antiguo Testamento?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Compara la brecha temporal entre los manuscritos que conocíamos antes y los encontrados en Qumrán.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Aunque algunos fragmentos se acercan a la Septuaginta, el descubrimiento validó principalmente la antigüedad y precisión de la tradición hebrea.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Probaron que la Septuaginta era la única fuente original utilizada por los escribas.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque algunos fragmentos se acercan a la Septuaginta, el descubrimiento validó principalmente la antigüedad y precisión de la tradición hebrea.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La gran mayoría de los rollos bíblicos encontrados están escritos en hebreo, confirmando el idioma original de las Escrituras.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Indicaron que el Antiguo Testamento fue escrito originalmente en lengua aramea y no en hebreo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La gran mayoría de los rollos bíblicos encontrados están escritos en hebreo, confirmando el idioma original de las Escrituras.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="Al comparar estos manuscritos del siglo II a.C. con el Texto Masorético del siglo X d.C., se confirmó una asombrosa fidelidad en el copiado a través de los siglos.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Demostraron que el texto hebreo se mantuvo prácticamente inalterado durante más de mil años de transmisión.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Al comparar estos manuscritos del siglo II a.C. con el Texto Masorético del siglo X d.C., se confirmó una asombrosa fidelidad en el copiado a través de los siglos.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Los hallazgos en realidad reforzaron la consistencia del mensaje profético ya conocido en el canon hebreo.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Revelaron libros perdidos que contradicen las enseñanzas de los profetas mayores.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Los hallazgos en realidad reforzaron la consistencia del mensaje profético ya conocido en el canon hebreo.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="1">
+          <div class="q-header">
+            <span class="q-number">Question 2</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Cuál fue la contribución más significativa de los Masoretas a la preservación del texto hebreo?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en cómo se aseguraban de que la lectura de un idioma sin vocales escritas fuera siempre la misma.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La fijación del canon fue un proceso histórico y eclesiástico previo; los masoretas se dedicaron a la transmisión técnica del texto ya aceptado.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Fueron los encargados de decidir qué libros debían formar parte del canon oficial.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La fijación del canon fue un proceso histórico y eclesiástico previo; los masoretas se dedicaron a la transmisión técnica del texto ya aceptado.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="Su sistema de 'puntos vocálicos' fijó la pronunciación tradicional y sus estadísticas de letras garantizaban que no se añadiera ni quitara nada al copiar.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Establecieron un sistema de puntos de vocales y realizaron conteos exhaustivos de letras para evitar errores.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Su sistema de 'puntos vocálicos' fijó la pronunciación tradicional y sus estadísticas de letras garantizaban que no se añadiera ni quitara nada al copiar.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Esa labor corresponde a Jerónimo con la Vulgata; los masoretas se centraron exclusivamente en el texto hebreo original.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Tradujeron el Antiguo Testamento al latín para su difusión en Occidente.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Esa labor corresponde a Jerónimo con la Vulgata; los masoretas se centraron exclusivamente en el texto hebreo original.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="El cambio a minúsculas es un desarrollo de los manuscritos griegos del Nuevo Testamento, no de la tradición masorética hebrea.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Cambiaron el estilo de escritura de letras mayúsculas a minúsculas cursivas.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El cambio a minúsculas es un desarrollo de los manuscritos griegos del Nuevo Testamento, no de la tradición masorética hebrea.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="2">
+          <div class="q-header">
+            <span class="q-number">Question 3</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">En el estudio de los manuscritos griegos del Nuevo Testamento, ¿cuál es la principal diferencia entre los 'Unciales' y los 'Minúsculos'?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere la evolución de la escritura manual desde lo solemne hacia lo práctico.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Ambos tipos de manuscritos están escritos en griego; la diferencia radica en la caligrafía y la época.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">El idioma en el que están escritos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Ambos tipos de manuscritos están escritos en griego; la diferencia radica en la caligrafía y la época.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Ambos grupos pueden contener cualquier parte del Nuevo Testamento, dependiendo de la completitud del manuscrito.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">El contenido, pues los unciales solo contienen los Evangelios.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Ambos grupos pueden contener cualquier parte del Nuevo Testamento, dependiendo de la completitud del manuscrito.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="Los unciales son más antiguos y solemnes, mientras que los minúsculos permitían una producción más rápida y económica de copias.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">El estilo de letra: mayúsculas grandes (siglos IV-IX) frente a letra cursiva pequeña (siglos IX-XV).</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Los unciales son más antiguos y solemnes, mientras que los minúsculos permitían una producción más rápida y económica de copias.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Aunque el material evolucionó, la clasificación técnica se refiere específicamente al estilo de la letra.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">El material, ya que unos usan papiro y otros pergamino.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque el material evolucionó, la clasificación técnica se refiere específicamente al estilo de la letra.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="3">
+          <div class="q-header">
+            <span class="q-number">Question 4</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">Las variantes textuales encontradas al comparar miles de manuscritos del Nuevo Testamento se deben principalmente a:</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en lo que sucede cuando una persona copia a mano un texto muy extenso o lo escribe mientras alguien más lo lee.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="Factores como la fatiga, la mala iluminación o el dictado grupal generaban pequeñas diferencias ortográficas o gramaticales sin alterar el mensaje.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Errores no intencionales del ojo o del oído cometidos por los copistas.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Factores como la fatiga, la mala iluminación o el dictado grupal generaban pequeñas diferencias ortográficas o gramaticales sin alterar el mensaje.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="No hay evidencia histórica de cambios sistemáticos de doctrina; la mayoría de las variantes son accidentales.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Conspiraciones para ocultar verdades teológicas incómodas.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">No hay evidencia histórica de cambios sistemáticos de doctrina; la mayoría de las variantes son accidentales.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La doctrina de la inspiración se aplica a los autores originales; los copistas eran instrumentos humanos sujetos a limitaciones físicas.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Diferencias en la inspiración divina de cada escriba.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La doctrina de la inspiración se aplica a los autores originales; los copistas eran instrumentos humanos sujetos a limitaciones físicas.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="La mayoría de las variantes en los manuscritos griegos no fueron cambios planificados, sino deslices técnicos durante el proceso manual.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Actualizaciones lingüísticas autorizadas por los concilios.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La mayoría de las variantes en los manuscritos griegos no fueron cambios planificados, sino deslices técnicos durante el proceso manual.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="4">
+          <div class="q-header">
+            <span class="q-number">Question 5</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Qué ventaja pedagógica y práctica supuso la adopción del 'Códice' (Codex) frente al uso de rollos?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en la diferencia entre desenrollar un papel largo y abrir un libro por la mitad.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="El códice seguía usando papiro o pergamino; el papel no se introdujo en la Biblia hasta mucho después.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Permitió escribir en un material más barato como el papel moderno.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El códice seguía usando papiro o pergamino; el papel no se introdujo en la Biblia hasta mucho después.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="El formato de libro no altera la resistencia física del material (papiro o piel) ante elementos como el fuego o la humedad.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Hizo que los manuscritos fueran indestructibles ante el fuego.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El formato de libro no altera la resistencia física del material (papiro o piel) ante elementos como el fuego o la humedad.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="El error de copiado es independiente del formato del libro; depende de la atención del escriba al transcribir.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Garantizó que no se cometieran más errores de copiado.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El error de copiado es independiente del formato del libro; depende de la atención del escriba al transcribir.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="Al tener páginas encuadernadas, los cristianos podían hojear las Escrituras y compilar todos los libros sagrados en un formato más manejable.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Facilitó la localización rápida de pasajes y permitió incluir más texto en un solo volumen.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Al tener páginas encuadernadas, los cristianos podían hojear las Escrituras y compilar todos los libros sagrados en un formato más manejable.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="5">
+          <div class="q-header">
+            <span class="q-number">Question 6</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Es correcto afirmar que hoy poseemos los manuscritos originales (autógrafos) escritos directamente por Moisés o Pablo?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere la fragilidad de los materiales de escritura del primer siglo frente al paso de miles de años.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Lamentablemente, el desgaste natural de los materiales antiguos como el papiro impidió que los originales sobrevivieran hasta hoy.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Verdadero</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Lamentablemente, el desgaste natural de los materiales antiguos como el papiro impidió que los originales sobrevivieran hasta hoy.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="No tenemos los autógrafos, pero la abundancia y antigüedad de las copias permiten reconstruir el texto original con una precisión científica excepcional.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Falso</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">No tenemos los autógrafos, pero la abundancia y antigüedad de las copias permiten reconstruir el texto original con una precisión científica excepcional.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="6">
+          <div class="q-header">
+            <span class="q-number">Question 7</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Cuál es el impacto de las variantes textuales sobre las doctrinas fundamentales de la fe cristiana?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Recuerde lo que los eruditos concluyen sobre la proporción de palabras que realmente están en duda.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="Como afirma la teología de autores como Hort, la proporción de palabras en duda es mínima y no toca los pilares del mensaje de redención.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Ninguna doctrina fundamental es afectada o puesta en duda por las variantes textuales existentes.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Como afirma la teología de autores como Hort, la proporción de palabras en duda es mínima y no toca los pilares del mensaje de redención.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La crítica textual demuestra que las variaciones son menores y no afectan el núcleo de la revelación divina.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Las variantes han hecho que las doctrinas principales sean inciertas.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La crítica textual demuestra que las variaciones son menores y no afectan el núcleo de la revelación divina.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="7">
+          <div class="q-header">
+            <span class="q-number">Question 8</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Qué característica del 'Papiro' explica por qué no han sobrevivido los manuscritos originales del Nuevo Testamento?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en la composición física de este material y su resistencia al tiempo.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="El papiro era una superficie excelente para escribir; el problema era la durabilidad física de la hoja misma, no la adherencia de la tinta.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">La tinta no se adhería bien y el texto se borraba solo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El papiro era una superficie excelente para escribir; el problema era la durabilidad física de la hoja misma, no la adherencia de la tinta.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Hubo persecuciones, pero la causa principal de la pérdida de originales es el deterioro natural del material por el uso y el tiempo.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Era un material que los romanos quemaban sistemáticamente por ley.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Hubo persecuciones, pero la causa principal de la pérdida de originales es el deterioro natural del material por el uso y el tiempo.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="Hecho de tiras de una planta egipcia, este material no resiste el paso de los siglos a menos que se encuentre en condiciones de sequedad extrema.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Su origen vegetal lo hace extremadamente frágil y propenso a la descomposición en climas húmedos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Hecho de tiras de una planta egipcia, este material no resiste el paso de los siglos a menos que se encuentre en condiciones de sequedad extrema.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="La piedra se usó para inscripciones monumentales, pero nunca fue el formato práctico para transmitir las extensas cartas o evangelios.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Fue reemplazado por la piedra, que era más duradera.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La piedra se usó para inscripciones monumentales, pero nunca fue el formato práctico para transmitir las extensas cartas o evangelios.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="8">
+          <div class="q-header">
+            <span class="q-number">Question 9</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">La disciplina de la 'Crítica Textual' tiene como propósito principal:</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere qué hace un científico que tiene diez copias manuscritas de una misma carta con pequeñas diferencias entre ellas.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La traducción es un paso posterior; la crítica textual se encarga de que la fuente que se va a traducir sea lo más exacta posible.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Traducir la Biblia de forma que sea fácil de entender hoy.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La traducción es un paso posterior; la crítica textual se encarga de que la fuente que se va a traducir sea lo más exacta posible.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="Es una ciencia que busca purificar el texto de alteraciones accidentales mediante la comparación rigurosa de miles de copias.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Comparar los manuscritos para identificar y eliminar errores de copistas, recuperando el texto original.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Es una ciencia que busca purificar el texto de alteraciones accidentales mediante la comparación rigurosa de miles de copias.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Esa es la crítica histórica; la textual se enfoca exclusivamente en la recuperación de las palabras originales del documento.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Juzgar la veracidad histórica de los milagros descritos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Esa es la crítica histórica; la textual se enfoca exclusivamente en la recuperación de las palabras originales del documento.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Eso corresponde al estudio del canon; la crítica textual trabaja con libros que ya se consideran parte del texto sagrado.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Decidir qué libros son inspirados por Dios y cuáles no.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Eso corresponde al estudio del canon; la crítica textual trabaja con libros que ya se consideran parte del texto sagrado.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="9">
+          <div class="q-header">
+            <span class="q-number">Question 10</span>
+            <span class="q-of">/ 10</span>
+          </div>
+          <div class="q-text">¿Por qué el estudiante del Seminario puede confiar plenamente en la Biblia actual a pesar de los errores de los copistas medievales?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Relacione la labor de los arqueólogos y científicos con la soberanía de Dios sobre Su Palabra.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="La combinación del trabajo masorético, los Rollos del Mar Muerto y la crítica textual moderna asegura que el mensaje de redención permanece inalterable.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Debido a la providencia divina manifestada en la abundancia de manuscritos y descubrimientos que validan la fidelidad del mensaje.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La combinación del trabajo masorético, los Rollos del Mar Muerto y la crítica textual moderna asegura que el mensaje de redención permanece inalterable.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La inspiración se dio en el origen; la preservación ha sido un proceso providencial asistido por la labor humana y científica.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Porque Dios dictó mecánicamente cada revisión moderna para corregir errores.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La inspiración se dio en el origen; la preservación ha sido un proceso providencial asistido por la labor humana y científica.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La historia de los manuscritos demuestra que sí hubo errores humanos menores, los cuales hoy podemos identificar y corregir.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Porque la Iglesia Católica garantizó que nunca se cometiera ni un solo error de ortografía.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La historia de los manuscritos demuestra que sí hubo errores humanos menores, los cuales hoy podemos identificar y corregir.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Las traducciones serias se basan precisamente en el estudio científico de los manuscritos más antiguos y confiables.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Porque las traducciones modernas ignoran los manuscritos antiguos y usan revelaciones directas.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Las traducciones serias se basan precisamente en el estudio científico de los manuscritos más antiguos y confiables.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      </div>
+  <div class="results" id="results">
+    <h2>Quiz Complete!</h2>
+    <div class="score" id="score">0%</div>
+    <div class="score-text" id="score-text"></div>
+    <button class="restart-btn" onclick="restart()">Try Again</button>
+  </div>
+</div>
+<script>
+const quizData = [{"question":"¿Qué importancia fundamental tienen los Rollos del Mar Muerto descubiertos en 1947 para la confiabilidad del Antiguo Testamento?","hint":"Compara la brecha temporal entre los manuscritos que conocíamos antes y los encontrados en Qumrán.","options":[{"label":"A","text":"Probaron que la Septuaginta era la única fuente original utilizada por los escribas.","isCorrect":false,"rationale":"Aunque algunos fragmentos se acercan a la Septuaginta, el descubrimiento validó principalmente la antigüedad y precisión de la tradición hebrea."},{"label":"B","text":"Indicaron que el Antiguo Testamento fue escrito originalmente en lengua aramea y no en hebreo.","isCorrect":false,"rationale":"La gran mayoría de los rollos bíblicos encontrados están escritos en hebreo, confirmando el idioma original de las Escrituras."},{"label":"C","text":"Demostraron que el texto hebreo se mantuvo prácticamente inalterado durante más de mil años de transmisión.","isCorrect":true,"rationale":"Al comparar estos manuscritos del siglo II a.C. con el Texto Masorético del siglo X d.C., se confirmó una asombrosa fidelidad en el copiado a través de los siglos."},{"label":"D","text":"Revelaron libros perdidos que contradicen las enseñanzas de los profetas mayores.","isCorrect":false,"rationale":"Los hallazgos en realidad reforzaron la consistencia del mensaje profético ya conocido en el canon hebreo."}]},{"question":"¿Cuál fue la contribución más significativa de los Masoretas a la preservación del texto hebreo?","hint":"Piense en cómo se aseguraban de que la lectura de un idioma sin vocales escritas fuera siempre la misma.","options":[{"label":"A","text":"Fueron los encargados de decidir qué libros debían formar parte del canon oficial.","isCorrect":false,"rationale":"La fijación del canon fue un proceso histórico y eclesiástico previo; los masoretas se dedicaron a la transmisión técnica del texto ya aceptado."},{"label":"B","text":"Establecieron un sistema de puntos de vocales y realizaron conteos exhaustivos de letras para evitar errores.","isCorrect":true,"rationale":"Su sistema de 'puntos vocálicos' fijó la pronunciación tradicional y sus estadísticas de letras garantizaban que no se añadiera ni quitara nada al copiar."},{"label":"C","text":"Tradujeron el Antiguo Testamento al latín para su difusión en Occidente.","isCorrect":false,"rationale":"Esa labor corresponde a Jerónimo con la Vulgata; los masoretas se centraron exclusivamente en el texto hebreo original."},{"label":"D","text":"Cambiaron el estilo de escritura de letras mayúsculas a minúsculas cursivas.","isCorrect":false,"rationale":"El cambio a minúsculas es un desarrollo de los manuscritos griegos del Nuevo Testamento, no de la tradición masorética hebrea."}]},{"question":"En el estudio de los manuscritos griegos del Nuevo Testamento, ¿cuál es la principal diferencia entre los 'Unciales' y los 'Minúsculos'?","hint":"Considere la evolución de la escritura manual desde lo solemne hacia lo práctico.","options":[{"label":"A","text":"El idioma en el que están escritos.","isCorrect":false,"rationale":"Ambos tipos de manuscritos están escritos en griego; la diferencia radica en la caligrafía y la época."},{"label":"B","text":"El contenido, pues los unciales solo contienen los Evangelios.","isCorrect":false,"rationale":"Ambos grupos pueden contener cualquier parte del Nuevo Testamento, dependiendo de la completitud del manuscrito."},{"label":"C","text":"El estilo de letra: mayúsculas grandes (siglos IV-IX) frente a letra cursiva pequeña (siglos IX-XV).","isCorrect":true,"rationale":"Los unciales son más antiguos y solemnes, mientras que los minúsculos permitían una producción más rápida y económica de copias."},{"label":"D","text":"El material, ya que unos usan papiro y otros pergamino.","isCorrect":false,"rationale":"Aunque el material evolucionó, la clasificación técnica se refiere específicamente al estilo de la letra."}]},{"question":"Las variantes textuales encontradas al comparar miles de manuscritos del Nuevo Testamento se deben principalmente a:","hint":"Piense en lo que sucede cuando una persona copia a mano un texto muy extenso o lo escribe mientras alguien más lo lee.","options":[{"label":"A","text":"Errores no intencionales del ojo o del oído cometidos por los copistas.","isCorrect":true,"rationale":"Factores como la fatiga, la mala iluminación o el dictado grupal generaban pequeñas diferencias ortográficas o gramaticales sin alterar el mensaje."},{"label":"B","text":"Conspiraciones para ocultar verdades teológicas incómodas.","isCorrect":false,"rationale":"No hay evidencia histórica de cambios sistemáticos de doctrina; la mayoría de las variantes son accidentales."},{"label":"C","text":"Diferencias en la inspiración divina de cada escriba.","isCorrect":false,"rationale":"La doctrina de la inspiración se aplica a los autores originales; los copistas eran instrumentos humanos sujetos a limitaciones físicas."},{"label":"D","text":"Actualizaciones lingüísticas autorizadas por los concilios.","isCorrect":false,"rationale":"La mayoría de las variantes en los manuscritos griegos no fueron cambios planificados, sino deslices técnicos durante el proceso manual."}]},{"question":"¿Qué ventaja pedagógica y práctica supuso la adopción del 'Códice' (Codex) frente al uso de rollos?","hint":"Piense en la diferencia entre desenrollar un papel largo y abrir un libro por la mitad.","options":[{"label":"A","text":"Permitió escribir en un material más barato como el papel moderno.","isCorrect":false,"rationale":"El códice seguía usando papiro o pergamino; el papel no se introdujo en la Biblia hasta mucho después."},{"label":"B","text":"Hizo que los manuscritos fueran indestructibles ante el fuego.","isCorrect":false,"rationale":"El formato de libro no altera la resistencia física del material (papiro o piel) ante elementos como el fuego o la humedad."},{"label":"C","text":"Garantizó que no se cometieran más errores de copiado.","isCorrect":false,"rationale":"El error de copiado es independiente del formato del libro; depende de la atención del escriba al transcribir."},{"label":"D","text":"Facilitó la localización rápida de pasajes y permitió incluir más texto en un solo volumen.","isCorrect":true,"rationale":"Al tener páginas encuadernadas, los cristianos podían hojear las Escrituras y compilar todos los libros sagrados en un formato más manejable."}]},{"question":"¿Es correcto afirmar que hoy poseemos los manuscritos originales (autógrafos) escritos directamente por Moisés o Pablo?","hint":"Considere la fragilidad de los materiales de escritura del primer siglo frente al paso de miles de años.","options":[{"label":"A","text":"Verdadero","isCorrect":false,"rationale":"Lamentablemente, el desgaste natural de los materiales antiguos como el papiro impidió que los originales sobrevivieran hasta hoy."},{"label":"B","text":"Falso","isCorrect":true,"rationale":"No tenemos los autógrafos, pero la abundancia y antigüedad de las copias permiten reconstruir el texto original con una precisión científica excepcional."}]},{"question":"¿Cuál es el impacto de las variantes textuales sobre las doctrinas fundamentales de la fe cristiana?","hint":"Recuerde lo que los eruditos concluyen sobre la proporción de palabras que realmente están en duda.","options":[{"label":"A","text":"Ninguna doctrina fundamental es afectada o puesta en duda por las variantes textuales existentes.","isCorrect":true,"rationale":"Como afirma la teología de autores como Hort, la proporción de palabras en duda es mínima y no toca los pilares del mensaje de redención."},{"label":"B","text":"Las variantes han hecho que las doctrinas principales sean inciertas.","isCorrect":false,"rationale":"La crítica textual demuestra que las variaciones son menores y no afectan el núcleo de la revelación divina."}]},{"question":"¿Qué característica del 'Papiro' explica por qué no han sobrevivido los manuscritos originales del Nuevo Testamento?","hint":"Piense en la composición física de este material y su resistencia al tiempo.","options":[{"label":"A","text":"La tinta no se adhería bien y el texto se borraba solo.","isCorrect":false,"rationale":"El papiro era una superficie excelente para escribir; el problema era la durabilidad física de la hoja misma, no la adherencia de la tinta."},{"label":"B","text":"Era un material que los romanos quemaban sistemáticamente por ley.","isCorrect":false,"rationale":"Hubo persecuciones, pero la causa principal de la pérdida de originales es el deterioro natural del material por el uso y el tiempo."},{"label":"C","text":"Su origen vegetal lo hace extremadamente frágil y propenso a la descomposición en climas húmedos.","isCorrect":true,"rationale":"Hecho de tiras de una planta egipcia, este material no resiste el paso de los siglos a menos que se encuentre en condiciones de sequedad extrema."},{"label":"D","text":"Fue reemplazado por la piedra, que era más duradera.","isCorrect":false,"rationale":"La piedra se usó para inscripciones monumentales, pero nunca fue el formato práctico para transmitir las extensas cartas o evangelios."}]},{"question":"La disciplina de la 'Crítica Textual' tiene como propósito principal:","hint":"Considere qué hace un científico que tiene diez copias manuscritas de una misma carta con pequeñas diferencias entre ellas.","options":[{"label":"A","text":"Traducir la Biblia de forma que sea fácil de entender hoy.","isCorrect":false,"rationale":"La traducción es un paso posterior; la crítica textual se encarga de que la fuente que se va a traducir sea lo más exacta posible."},{"label":"B","text":"Comparar los manuscritos para identificar y eliminar errores de copistas, recuperando el texto original.","isCorrect":true,"rationale":"Es una ciencia que busca purificar el texto de alteraciones accidentales mediante la comparación rigurosa de miles de copias."},{"label":"C","text":"Juzgar la veracidad histórica de los milagros descritos.","isCorrect":false,"rationale":"Esa es la crítica histórica; la textual se enfoca exclusivamente en la recuperación de las palabras originales del documento."},{"label":"D","text":"Decidir qué libros son inspirados por Dios y cuáles no.","isCorrect":false,"rationale":"Eso corresponde al estudio del canon; la crítica textual trabaja con libros que ya se consideran parte del texto sagrado."}]},{"question":"¿Por qué el estudiante del Seminario puede confiar plenamente en la Biblia actual a pesar de los errores de los copistas medievales?","hint":"Relacione la labor de los arqueólogos y científicos con la soberanía de Dios sobre Su Palabra.","options":[{"label":"A","text":"Debido a la providencia divina manifestada en la abundancia de manuscritos y descubrimientos que validan la fidelidad del mensaje.","isCorrect":true,"rationale":"La combinación del trabajo masorético, los Rollos del Mar Muerto y la crítica textual moderna asegura que el mensaje de redención permanece inalterable."},{"label":"B","text":"Porque Dios dictó mecánicamente cada revisión moderna para corregir errores.","isCorrect":false,"rationale":"La inspiración se dio en el origen; la preservación ha sido un proceso providencial asistido por la labor humana y científica."},{"label":"C","text":"Porque la Iglesia Católica garantizó que nunca se cometiera ni un solo error de ortografía.","isCorrect":false,"rationale":"La historia de los manuscritos demuestra que sí hubo errores humanos menores, los cuales hoy podemos identificar y corregir."},{"label":"D","text":"Porque las traducciones modernas ignoran los manuscritos antiguos y usan revelaciones directas.","isCorrect":false,"rationale":"Las traducciones serias se basan precisamente en el estudio científico de los manuscritos más antiguos y confiables."}]}];
+const tr = {"correct":"Correct!","incorrect":"Incorrect","next":"Next Question →","seeResults":"See Results","complete":"Quiz Complete!","scoreText":"You got {correct} out of {total} correct","tryAgain":"Try Again","rightAnswer":"Right answer","notQuite":"Not quite"};
+let currentQ = 0, correctCount = 0, answered = false;
+
+function init() {
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === 0));
+  updateProgress();
+  document.querySelectorAll('.option').forEach(opt => opt.addEventListener('click', () => selectOption(opt)));
+  document.querySelectorAll('.next-btn').forEach(btn => btn.addEventListener('click', nextQuestion));
+}
+
+function selectOption(opt) {
+  if (answered) return;
+  answered = true;
+  const q = opt.closest('.question');
+  const options = q.querySelectorAll('.option');
+  const nextBtn = q.querySelector('.next-btn');
+  const isCorrect = opt.dataset.correct === 'true';
+  
+  // Mark all options as disabled
+  options.forEach(o => o.classList.add('disabled'));
+  
+  // Style selected option
+  opt.classList.add('selected', isCorrect ? 'correct' : 'incorrect');
+  
+  // Show correct answer if wrong
+  if (!isCorrect) {
+    const correctOpt = [...options].find(o => o.dataset.correct === 'true');
+    if (correctOpt) correctOpt.classList.add('show-correct');
+  }
+  
+  if (isCorrect) correctCount++;
+  
+  // Show feedback for ALL options that have rationale
+  options.forEach(o => {
+    const wrapper = o.closest('.option-wrapper');
+    const feedback = wrapper.querySelector('.option-feedback');
+    const rationale = o.dataset.rationale;
+    const isThisCorrect = o.dataset.correct === 'true';
+    
+    if (rationale && rationale.trim()) {
+      feedback.classList.remove('hidden');
+      feedback.classList.add(isThisCorrect ? 'correct-feedback' : 'incorrect-feedback');
+      
+      const statusEl = feedback.querySelector('.feedback-status');
+      statusEl.className = 'feedback-status ' + (isThisCorrect ? 'correct' : 'incorrect');
+      statusEl.innerHTML = isThisCorrect 
+        ? '✓ ' + tr.rightAnswer
+        : '✗ ' + tr.notQuite;
+    }
+  });
+  
+  nextBtn.classList.remove('hidden');
+  if (currentQ === quizData.length - 1) nextBtn.textContent = tr.seeResults;
+}
+
+function nextQuestion() {
+  answered = false;
+  currentQ++;
+  if (currentQ >= quizData.length) { showResults(); return; }
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === currentQ));
+  updateProgress();
+}
+
+function updateProgress() {
+  document.querySelector('.progress-fill').style.width = (currentQ / quizData.length * 100) + '%';
+}
+
+function showResults() {
+  document.querySelectorAll('.question').forEach(q => q.classList.remove('active'));
+  document.getElementById('results').classList.add('active');
+  const pct = Math.round((correctCount / quizData.length) * 100);
+  document.getElementById('score').textContent = pct + '%';
+  document.getElementById('score-text').textContent = tr.scoreText.replace('{correct}', correctCount).replace('{total}', quizData.length);
+  document.querySelector('.progress-fill').style.width = '100%';
+}
+
+function restart() {
+  currentQ = 0; correctCount = 0; answered = false;
+  document.getElementById('results').classList.remove('active');
+  document.querySelectorAll('.question').forEach((q, i) => {
+    q.classList.toggle('active', i === 0);
+    q.querySelectorAll('.option').forEach(o => o.classList.remove('selected', 'correct', 'incorrect', 'disabled', 'show-correct'));
+    q.querySelectorAll('.option-feedback').forEach(f => {
+      f.classList.add('hidden');
+      f.classList.remove('correct-feedback', 'incorrect-feedback');
+    });
+    const btn = q.querySelector('.next-btn');
+    btn.classList.add('hidden');
+    btn.textContent = tr.next;
+  });
+  updateProgress();
+}
+
+init();
+</script>
+</body>
+</html>

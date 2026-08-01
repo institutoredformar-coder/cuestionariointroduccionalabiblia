@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cuestionarios - Lista Automática</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-hover: #1557b0;
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-main: #202124;
+      --text-muted: #5f6368;
+      --border-color: #dadce0;
+      --hover-bg: #f1f3f4;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px 20px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 1px 3px rgba(60,64,67,0.08), 0 4px 8px rgba(60,64,67,0.04);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .badge {
+      display: inline-block;
+      background-color: #e8f0fe;
+      color: var(--primary);
+      font-family: 'Google Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-family: 'Google Sans', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .select-wrapper {
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--text-main);
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      appearance: none;
+      -webkit-appearance: none;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .select-wrapper::after {
+      content: "▼";
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Google Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+      background-color: var(--primary-hover);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 20px 0;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .divider span {
+      padding: 0 10px;
+    }
+
+    .quiz-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .quiz-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text-main);
+      font-family: 'Google Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      word-break: break-word;
+    }
+
+    .quiz-card:active, .quiz-card:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .quiz-card .icon {
+      color: var(--primary);
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-left: 8px;
+    }
+
+    .status-msg {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      padding: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <span class="badge">Evaluaciones</span>
+      <h1>Cuestionarios Disponibles</h1>
+      <p class="subtitle">Selecciona o pulsa el cuestionario que deseas responder</p>
+    </div>
+
+    <!-- Menú desplegable -->
+    <div class="select-wrapper">
+      <select id="quizSelect">
+        <option value="" disabled selected>Cargando lista...</option>
+      </select>
+    </div>
+
+    <button class="btn-primary" onclick="abrirCuestionario()">Iniciar Cuestionario</button>
+
+    <div class="divider">
+      <span>CUESTIONARIOS DETECTADOS</span>
+    </div>
+
+    <!-- Contenedor dinámico de botones -->
+    <div class="quiz-list" id="quizList">
+      <div class="status-msg">Buscando cuestionarios en el repositorio...</div>
+    </div>
+  </div>
+
+  <script>
+    // Se extrae automáticamente el usuario y repositorio según el dominio actual
+    let username = window.location.hostname.split('.')[0];
+    let pathSegments = window.location.pathname.split('/').filter(Boolean);
+    let repoName = pathSegments.length > 0 ? pathSegments[0] : '';
+
+    // En caso de probarlo de forma local o alternativa, valores por defecto de tu repositorio
+    if (!username || username === 'localhost') username = 'institutoredformar-coder';
+    if (!repoName) repoName = 'cuestionariointroduccionalabiblia1';
+
+    const apiUrl = `https://api.github.com/repos/${username}/${repoName}/contents/`;
+
+    async function cargarCuestionarios() {
+      const select = document.getElementById('quizSelect');
+      const listContainer = document.getElementById('quizList');
+
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error('No se pudo acceder al repositorio');
+
+        const files = await response.json();
+
+        // Filtrar solo archivos .html excluyendo 'index.html'
+        const htmlFiles = files.filter(file => 
+          file.name.endsWith('.html') && file.name.toLowerCase() !== 'index.html'
+        );
+
+        select.innerHTML = '<option value="" disabled selected>Elige un cuestionario...</option>';
+        listContainer.innerHTML = '';
+
+        if (htmlFiles.length === 0) {
+          listContainer.innerHTML = '<div class="status-msg">No se encontraron cuestionarios adicionales.</div>';
+          return;
+        }
+
+        htmlFiles.forEach(file => {
+          // Formatear el nombre visible (ej: cuestionario1.html -> Cuestionario 1)
+          let nombreLimpio = file.name
+            .replace('.html', '')
+            .replace(/[-_]/g, ' ')
+            .replace(/\b\w/g, l => l.toUpperCase());
+
+          // Añadir opción al menú desplegable
+          const option = document.createElement('option');
+          option.value = file.name;
+          option.textContent = nombreLimpio;
+          select.appendChild(option);
+
+          // Crear tarjeta con enlace directo
+          const card = document.createElement('a');
+          card.className = 'quiz-card';
+          card.href = file.name;
+          card.innerHTML = `<span>${nombreLimpio}</span><span class="icon">›</span>`;
+          listContainer.appendChild(card);
+        });
+
+      } catch (error) {
+        select.innerHTML = '<option value="" disabled selected>Error al cargar</option>';
+        listContainer.innerHTML = `<div class="status-msg">No se pudieron listar los archivos automáticamente.</div>`;
+      }
+    }
+
+    function abrirCuestionario() {
+      const select = document.getElementById('quizSelect');
+      const url = select.value;
+      if (url) {
+        window.location.href = url;
+      } else {
+        alert('Por favor selecciona un cuestionario de la lista.');
+      }
+    }
+
+    // Cargar la lista automáticamente al abrir la página
+    window.onload = cargarCuestionarios;
+  </script>
+
+</body>
+</html>

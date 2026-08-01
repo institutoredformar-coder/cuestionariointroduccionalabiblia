@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario - Módulo V: Propagación e Impacto Misionero</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh; padding: 20px; color: #333;
+}
+.container { max-width: 700px; margin: 0 auto; }
+.header { text-align: center; color: #fff; padding: 30px 20px; }
+.header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.header .meta { font-size: 14px; opacity: 0.9; }
+.progress-bar { background: rgba(255,255,255,0.3); border-radius: 10px; height: 8px; margin: 20px 0; overflow: hidden; }
+.progress-fill { background: #fff; height: 100%; width: 0%; transition: width 0.4s ease; border-radius: 10px; }
+.question { background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: none; }
+.question.active { display: block; }
+.q-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; color: #888; }
+.q-number { font-weight: 600; color: #667eea; }
+.q-text { font-size: 18px; font-weight: 600; line-height: 1.5; margin-bottom: 25px; color: #222; }
+.options { display: flex; flex-direction: column; gap: 12px; }
+.option-wrapper { display: flex; flex-direction: column; }
+.option {
+  display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px;
+  border: 2px solid #e8e8e8; border-radius: 12px; background: #fafafa;
+  cursor: pointer; transition: all 0.2s; text-align: left; font-size: 15px; width: 100%;
+}
+[dir="rtl"] .option { text-align: right; flex-direction: row-reverse; }
+.option:hover:not(.disabled) { border-color: #667eea; background: #f5f3ff; }
+.option.selected { border-color: #667eea; background: #ede9fe; }
+.option.correct { border-color: #22c55e; background: #dcfce7; }
+.option.incorrect { border-color: #ef4444; background: #fee2e2; }
+.option.disabled { cursor: default; }
+.option.show-correct { border-color: #22c55e; background: #dcfce7; }
+.opt-label {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%; background: #e8e8e8;
+  font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+.option.selected .opt-label { background: #667eea; color: #fff; }
+.option.correct .opt-label { background: #22c55e; color: #fff; }
+.option.incorrect .opt-label { background: #ef4444; color: #fff; }
+.option.show-correct .opt-label { background: #22c55e; color: #fff; }
+.opt-text { padding-top: 5px; line-height: 1.5; }
+
+/* Individual option feedback */
+.option-feedback {
+  margin: 8px 0 4px 46px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+[dir="rtl"] .option-feedback { margin-left: 0; margin-right: 46px; }
+.option-feedback.correct-feedback {
+  background: #dcfce7;
+  border-left: 3px solid #22c55e;
+}
+.option-feedback.incorrect-feedback {
+  background: #fef3f2;
+  border-left: 3px solid #fca5a5;
+}
+[dir="rtl"] .option-feedback.correct-feedback,
+[dir="rtl"] .option-feedback.incorrect-feedback {
+  border-left: none;
+  border-right: 3px solid;
+}
+[dir="rtl"] .option-feedback.correct-feedback { border-right-color: #22c55e; }
+[dir="rtl"] .option-feedback.incorrect-feedback { border-right-color: #fca5a5; }
+.feedback-status {
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.feedback-status.correct { color: #166534; }
+.feedback-status.incorrect { color: #991b1b; }
+.feedback-rationale { color: #444; }
+
+/* Hint box */
+.hint-box {
+  margin: 12px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+}
+.hint-toggle {
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hint-toggle:hover { background: #fef3c7; }
+.hint-content {
+  padding: 0 16px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s, padding 0.3s;
+  font-size: 14px;
+  color: #78350f;
+  line-height: 1.5;
+}
+.hint-box.show .hint-content {
+  padding: 0 16px 12px;
+  max-height: 200px;
+}
+
+.next-btn {
+  margin-top: 20px; width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none;
+  border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.next-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
+.hidden { display: none !important; }
+.results { background: #fff; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: none; }
+.results.active { display: block; }
+.results h2 { font-size: 28px; margin-bottom: 10px; color: #333; }
+.results .score { font-size: 64px; font-weight: 700; color: #667eea; margin: 20px 0; }
+.results .score-text { font-size: 18px; color: #666; margin-bottom: 30px; }
+.restart-btn {
+  padding: 14px 40px; background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+
+/* Math CSS */
+.math, .math-block { font-family: "Cambria Math", "Times New Roman", Times, serif; font-style: italic; }
+.math-block { display: block; text-align: center; margin: 10px 0; font-size: 110%; }
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 3px; font-size: 0.9em; }
+.frac-num { border-bottom: 1px solid currentColor; padding: 0 4px 2px; line-height: 1.2; }
+.frac-den { padding: 2px 4px 0; line-height: 1.2; }
+.sqrt { white-space: nowrap; }
+.sqrt-content { border-top: 1px solid currentColor; padding: 0 3px; margin-left: 2px; }
+sup, sub { font-size: 0.75em; }
+sup { vertical-align: super; }
+sub { vertical-align: sub; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Cuestionario - Módulo V: Propagación e Impacto Misionero</h1>
+    <div class="meta">15 preguntas</div>
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+  </div>
+  <div id="quiz-container">
+        <div class="question" data-index="0">
+          <div class="q-header">
+            <span class="q-number">Pregunta 1</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">¿Cuál es la razón principal por la que se denomina a Guillermo Carey como el 'Padre de las misiones modernas' dentro del contexto de la Introducción a la Biblia?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en la herramienta que Carey consideraba esencial para que el mensaje de Dios penetrara en la cultura local.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Carey se destacó precisamente por lo contrario: su enorme esfuerzo en la traducción y producción de Biblias impresas.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Por su exclusiva dedicación a la predicación oral en las plazas públicas de la India sin recurrir a textos escritos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Carey se destacó precisamente por lo contrario: su enorme esfuerzo en la traducción y producción de Biblias impresas.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="Carey sostenía que la efectividad del evangelismo dependía de la disponibilidad de la Biblia en la lengua materna de cada pueblo.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Por su labor pionera en la traducción de las Escrituras a los idiomas vernáculos, permitiendo que millones en Asia tuvieran acceso al texto.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Carey sostenía que la efectividad del evangelismo dependía de la disponibilidad de la Biblia en la lengua materna de cada pueblo.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La imprenta de tipos móviles fue inventada por Gutenberg mucho antes de la era de Carey.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Por ser el primer misionero en utilizar la imprenta de tipos móviles en Europa para difundir el Nuevo Testamento.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La imprenta de tipos móviles fue inventada por Gutenberg mucho antes de la era de Carey.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Los Rollos del Mar Muerto fueron hallados en 1947, mucho después del fallecimiento de Carey.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Por haber descubierto los Rollos del Mar Muerto durante su estancia en el Oriente.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Los Rollos del Mar Muerto fueron hallados en 1947, mucho después del fallecimiento de Carey.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="1">
+          <div class="q-header">
+            <span class="q-number">Pregunta 2</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">¿Qué impacto lingüístico y cultural tuvo la traducción de la Biblia realizada por Martín Lutero en el siglo XVI?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere cómo una traducción puede influir en la identidad de una nación y su lenguaje.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La Biblia de Lutero fue diseñada para ser entendida por el hombre común en su vida diaria.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Fue una traducción técnica destinada exclusivamente a los eruditos y doctores de la Universidad de Wittenberg.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Biblia de Lutero fue diseñada para ser entendida por el hombre común en su vida diaria.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Lutero mantuvo la profundidad teológica, pero la hizo accesible a través de la lengua materna.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Resultó en la eliminación total de los conceptos teóricos en favor de una lectura puramente filosófica.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Lutero mantuvo la profundidad teológica, pero la hizo accesible a través de la lengua materna.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="El objetivo de Lutero era precisamente que el pueblo dejara de depender del latín para comprender la Palabra.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Provocó que el latín se estableciera como la única lengua permitida para los cultos en Alemania.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El objetivo de Lutero era precisamente que el pueblo dejara de depender del latín para comprender la Palabra.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="La traducción de Lutero no solo tuvo un impacto teológico, sino que sentó las bases del idioma alemán literario.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Unificó los dialectos germanos y se convirtió en la primera gran obra de arte de la prosa alemana moderna.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La traducción de Lutero no solo tuvo un impacto teológico, sino que sentó las bases del idioma alemán literario.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="2">
+          <div class="q-header">
+            <span class="q-number">Pregunta 3</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">El concepto de la Biblia como 'el misionero sin limitaciones' se refiere fundamentalmente a:</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Reflexione sobre la persistencia del mensaje escrito frente a las prohibiciones impuestas a las personas.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La traducción es un proceso esencial mencionado en el material para que el 'misionero' sea efectivo.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">El hecho de que la Biblia no requiere traducción alguna para ser comprendida por cualquier cultura.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La traducción es un proceso esencial mencionado en el material para que el 'misionero' sea efectivo.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="La Palabra escrita permanece y viaja de forma independiente, superando restricciones que detienen a los agentes humanos.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">La capacidad del texto impreso para penetrar fronteras políticas y geográficas donde el predicador humano tiene prohibido el paso.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Palabra escrita permanece y viaja de forma independiente, superando restricciones que detienen a los agentes humanos.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="El éxito de la propagación ha dependido históricamente de la labor de traductores y organizaciones dedicadas.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">La distribución gratuita y masiva de ejemplares sin necesidad de traductores o sociedades bíblicas.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El éxito de la propagación ha dependido históricamente de la labor de traductores y organizaciones dedicadas.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="El material enfatiza que la suficiencia de la Biblia radica en la verdad religiosa y el mensaje de redención.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Que la Biblia contiene toda la información científica necesaria para cualquier civilización.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El material enfatiza que la suficiencia de la Biblia radica en la verdad religiosa y el mensaje de redención.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="3">
+          <div class="q-header">
+            <span class="q-number">Pregunta 4</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">Según el análisis histórico de Kilgour, ¿cuál fue la causa principal de que la iglesia en el norte de África casi desapareciera en el siglo VII?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Compare la situación de esta región con la de Egipto o Siria, donde la iglesia sí sobrevivió.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Esta región tuvo a los líderes más prominentes; el problema fue que el mensaje no llegó al pueblo en su propia lengua.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">La ausencia de líderes teológicos importantes como Agustín o Tertuliano.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Esta región tuvo a los líderes más prominentes; el problema fue que el mensaje no llegó al pueblo en su propia lengua.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La iglesia sobrevivió a las persecuciones romanas; el colapso ocurrió siglos después por la falta de arraigo bíblico vernáculo.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Las persecuciones romanas que destruyeron todos los manuscritos originales en el siglo IV.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La iglesia sobrevivió a las persecuciones romanas; el colapso ocurrió siglos después por la falta de arraigo bíblico vernáculo.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="A diferencia de otras regiones, la iglesia norafricana dependía del latín, lo que debilitó la fe del pueblo ante la invasión.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">La falta de una traducción de las Escrituras al idioma vernáculo de la gente común.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">A diferencia de otras regiones, la iglesia norafricana dependía del latín, lo que debilitó la fe del pueblo ante la invasión.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="El problema no fue la abundancia de versiones, sino que el pueblo no tenía acceso a una que pudiera entender.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">El exceso de traducciones disponibles que confundieron a los creyentes sobre el canon verdadero.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El problema no fue la abundancia de versiones, sino que el pueblo no tenía acceso a una que pudiera entender.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="4">
+          <div class="q-header">
+            <span class="q-number">Pregunta 5</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">En el trabajo de traducción de John Paton en las Nuevas Hébridas, ¿cómo se resolvió la ausencia de una palabra para el concepto de 'creer'?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en la imagen de un hombre cansado que se desploma en una silla para descansar.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="Paton utilizó una analogía física cotidiana del pueblo para comunicar el significado profundo de la fe y la confianza.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Utilizando la expresión cultural 'descansar todo el peso sobre Cristo'.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Paton utilizó una analogía física cotidiana del pueblo para comunicar el significado profundo de la fe y la confianza.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La traducción misionera busca adaptar el mensaje al idioma receptor, no imponer lenguas extranjeras.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Obligando al pueblo a aprender el término griego original para evitar errores teológicos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La traducción misionera busca adaptar el mensaje al idioma receptor, no imponer lenguas extranjeras.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Se prefirió buscar un modismo o imagen ya existente en su realidad para facilitar la comprensión.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Inventando una palabra técnica nueva que no existía en el dialecto local.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Se prefirió buscar un modismo o imagen ya existente en su realidad para facilitar la comprensión.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="El concepto de fe es central en el evangelio y no puede ser omitido sin alterar el mensaje de salvación.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Omitiendo el concepto del Nuevo Testamento para no generar confusión.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El concepto de fe es central en el evangelio y no puede ser omitido sin alterar el mensaje de salvación.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="5">
+          <div class="q-header">
+            <span class="q-number">Pregunta 6</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">Verdadero o Falso: Antes del año 1800 d.C., la Biblia ya había sido impresa en más de 200 idiomas gracias al inicio de las sociedades bíblicas.</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Recuerde que el gran auge de las misiones modernas comenzó a finales del siglo XVIII.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="Para el año 1800 solo existían porciones impresas en 71 idiomas; la gran expansión ocurrió durante el siglo XIX.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Falso</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Para el año 1800 solo existían porciones impresas en 71 idiomas; la gran expansión ocurrió durante el siglo XIX.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Aunque hoy superamos los 1,200 idiomas, el progreso antes del siglo XIX fue mucho más lento.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Verdadero</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque hoy superamos los 1,200 idiomas, el progreso antes del siglo XIX fue mucho más lento.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="6">
+          <div class="q-header">
+            <span class="q-number">Pregunta 7</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">¿Qué lección fundamental sobre la preservación de la Palabra dejó la historia de la iglesia en Madagascar durante el siglo XIX?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere el resultado numérico de la iglesia malgache tras 25 años de prohibición.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La historia de Madagascar demuestra precisamente la suficiencia de la Palabra bajo la guía del Espíritu Santo.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Que sin la guía constante de un pastor extranjero, la doctrina se corrompe inevitablemente en pocos años.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La historia de Madagascar demuestra precisamente la suficiencia de la Palabra bajo la guía del Espíritu Santo.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="A pesar de la expulsión de misioneros, la iglesia creció diez veces gracias a las Biblias que el pueblo leyó en secreto.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Que las Escrituras pueden sostener y hacer crecer a la iglesia incluso en ausencia de misioneros y bajo persecución extrema.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">A pesar de la expulsión de misioneros, la iglesia creció diez veces gracias a las Biblias que el pueblo leyó en secreto.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Los cristianos de Madagascar escondieron y enterraron Biblias, demostrando que la fe puede prevalecer.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Que es imposible que la fe sobreviva si el gobierno prohíbe la posesión de libros sagrados.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Los cristianos de Madagascar escondieron y enterraron Biblias, demostrando que la fe puede prevalecer.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="El sacrificio de los creyentes malgaches resalta el valor supremo que daban a tener la Palabra en su lengua.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Que la traducción de la Biblia es un proceso que debe detenerse si pone en riesgo la vida de los creyentes.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El sacrificio de los creyentes malgaches resalta el valor supremo que daban a tener la Palabra en su lengua.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="7">
+          <div class="q-header">
+            <span class="q-number">Pregunta 8</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">¿Qué característica física singular marcó la labor de traducción del obispo Schereschewsky en China?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Reflexione sobre el esfuerzo mecánico de escribir un texto tan largo con una movilidad extremadamente reducida.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Aunque innovador, su trabajo se centró en la escritura a máquina del texto para el pueblo de habla mandarín.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Fue el primer traductor en utilizar un código de signos para sordos en la Biblia china.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque innovador, su trabajo se centró en la escritura a máquina del texto para el pueblo de habla mandarín.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Schereschewsky no era ciego, sino que sufría de una enfermedad en la espina dorsal que limitaba su movilidad.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Tradujo todo el Antiguo Testamento de memoria tras perder la vista en un incendio.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Schereschewsky no era ciego, sino que sufría de una enfermedad en la espina dorsal que limitaba su movilidad.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Su desafío no fue la persecución política, sino su propia limitación física severa.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Realizó la traducción mientras vivía escondido en una cueva para evitar a los perseguidores.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Su desafío no fue la persecución política, sino su propia limitación física severa.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="Su perseverancia durante 25 años como inválido es un testimonio del valor otorgado a la propagación bíblica.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Completó la traducción escribiendo a máquina con solo un dedo de cada mano debido a su parálisis.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Su perseverancia durante 25 años como inválido es un testimonio del valor otorgado a la propagación bíblica.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="8">
+          <div class="q-header">
+            <span class="q-number">Pregunta 9</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">De acuerdo con el material de estudio, ¿cuál es el 'hilo conductor' o mensaje unificado que une los 66 libros de la Biblia?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en el propósito por el cual Dios 'exhaló' Su Palabra a la humanidad.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Aunque la historia de Israel es el contexto, el propósito final es espiritual y redentor.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">La historia detallada de las guerras y conquistas políticas de los reyes de Israel.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque la historia de Israel es el contexto, el propósito final es espiritual y redentor.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="Toda la Biblia, desde el Génesis hasta el Apocalipsis, converge en el propósito salvífico de Dios.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">El plan de redención divina para el hombre pecador a través de Jesucristo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Toda la Biblia, desde el Génesis hasta el Apocalipsis, converge en el propósito salvífico de Dios.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="El material aclara que la infalibilidad y autoridad de la Biblia se relacionan especialmente con la verdad religiosa.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">La descripción científica del origen del universo y el fin del mundo físico.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El material aclara que la infalibilidad y autoridad de la Biblia se relacionan especialmente con la verdad religiosa.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="La Biblia es más que un manual de ética; es una revelación específica de salvación.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Un compendio de reglas morales y éticas aplicables a cualquier religión del mundo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La Biblia es más que un manual de ética; es una revelación específica de salvación.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="9">
+          <div class="q-header">
+            <span class="q-number">Pregunta 10</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">¿Por qué es fundamental afirmar que la Biblia es un libro 'divino-humano'?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere la analogía presentada en el texto sobre la doble naturaleza de Jesucristo.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La inspiración dinámica implica que Dios utilizó la totalidad de las facultades humanas bajo Su dirección.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Porque indica que la mitad de la Biblia fue dictada por Dios y la otra mitad inventada por hombres.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La inspiración dinámica implica que Dios utilizó la totalidad de las facultades humanas bajo Su dirección.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="La naturaleza divino-humana se refiere al origen del texto original, no a la historia de las traducciones posteriores.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Porque es la única forma de explicar por qué existen tantas traducciones diferentes hoy día.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La naturaleza divino-humana se refiere al origen del texto original, no a la historia de las traducciones posteriores.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La inspiración plenaria afirma que Dios supervisó todo el texto para que la verdad religiosa fuera sin error.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Porque permite separar las verdades divinas de los 'errores' culturales de los autores humanos.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La inspiración plenaria afirma que Dios supervisó todo el texto para que la verdad religiosa fuera sin error.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="Esta naturaleza dual garantiza una revelación infalible comunicada a través de medios comprensibles para el ser humano.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Porque reconoce a Dios como causa primaria y al hombre como instrumento activo que aporta su estilo y contexto.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Esta naturaleza dual garantiza una revelación infalible comunicada a través de medios comprensibles para el ser humano.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="10">
+          <div class="q-header">
+            <span class="q-number">Pregunta 11</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">¿Qué significa el término griego 'Teopneustos' mencionado en 2 Timoteo 3:16?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Relacione el término con la acción vital de los pulmones aplicada metafóricamente a Dios.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Dios utilizó autores humanos como instrumentos; no envió un libro ya encuadernado desde el cielo.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Escrito directamente desde el cielo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Dios utilizó autores humanos como instrumentos; no envió un libro ya encuadernado desde el cielo.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="Este término define la esencia de la inspiración: la Escritura es producto del 'aliento' divino.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Respirado o exhalado por Dios.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Este término define la esencia de la inspiración: la Escritura es producto del 'aliento' divino.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="La inspiración es una cualidad intrínseca del origen del texto, no una aprobación posterior humana.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Aprobado por los concilios de la iglesia.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La inspiración es una cualidad intrínseca del origen del texto, no una aprobación posterior humana.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Teopneustos se refiere al proceso de generación del texto sagrado, no a su traducción.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Traducido fielmente de los originales.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Teopneustos se refiere al proceso de generación del texto sagrado, no a su traducción.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="11">
+          <div class="q-header">
+            <span class="q-number">Pregunta 12</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">En la formación del canon, ¿cuál fue la postura de la Iglesia Protestante respecto a los libros apócrifos?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Recuerde qué versión del Antiguo Testamento (Hebrea o Griega) decidieron seguir los reformadores.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="La falta de evidencia de inspiración divina y errores teológicos motivaron su exclusión como norma de fe.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Los excluyó del canon por no encontrarse en la Biblia hebrea y presentar inconsistencias doctrinales.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La falta de evidencia de inspiración divina y errores teológicos motivaron su exclusión como norma de fe.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Fue la Iglesia Católica la que reafirmó su canonicidad, mientras que la Reforma los cuestionó.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Los aceptó como igualmente inspirados que el Pentateuco para mantener la unidad con la Vulgata.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Fue la Iglesia Católica la que reafirmó su canonicidad, mientras que la Reforma los cuestionó.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Lutero y otros los consideraban útiles para la historia o edificación, pero no para establecer doctrina.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Decidió quemarlos todos para evitar que los laicos leyeran historias legendarias.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Lutero y otros los consideraban útiles para la historia o edificación, pero no para establecer doctrina.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="El término 'apócrifo' fue usado por críticos para señalar su origen espurio, no una sabiduría oculta positiva.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Los consideró como la 'sabiduría secreta' que solo los pastores debían conocer.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El término 'apócrifo' fue usado por críticos para señalar su origen espurio, no una sabiduría oculta positiva.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="12">
+          <div class="q-header">
+            <span class="q-number">Pregunta 13</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">¿Qué importancia histórica tuvieron los Rollos del Mar Muerto (1947) para la confianza en el Antiguo Testamento?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Considere la brecha temporal entre estos manuscritos y las copias masoréticas más antiguas que se tenían antes.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="Al comparar el texto de Isaías de Qumrán con el Texto Masorético, la fidelidad de los copistas quedó demostrada.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Confirmaron que el texto hebreo se mantuvo prácticamente inalterado durante mil años de transmisión.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Al comparar el texto de Isaías de Qumrán con el Texto Masorético, la fidelidad de los copistas quedó demostrada.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="Los rollos confirmaron la antigüedad y autenticidad de los escritos proféticos conocidos.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Revelaron que los profetas del Antiguo Testamento no escribieron sus propios libros.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Los rollos confirmaron la antigüedad y autenticidad de los escritos proféticos conocidos.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="Aunque hay paralelos, los rollos reforzaron principalmente la autoridad del texto hebreo original.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Probaron que la Septuaginta era la única versión inspirada por Dios.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Aunque hay paralelos, los rollos reforzaron principalmente la autoridad del texto hebreo original.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="Los hallazgos de Qumrán se centran casi exclusivamente en el Antiguo Testamento y literatura sectaria judía.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Demostraron que el Nuevo Testamento fue escrito originalmente en hebreo y no en griego.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Los hallazgos de Qumrán se centran casi exclusivamente en el Antiguo Testamento y literatura sectaria judía.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="13">
+          <div class="q-header">
+            <span class="q-number">Pregunta 14</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">¿Cuál es la función del 'Texto Masorético' en la historia de la Biblia?</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Piense en la labor de los escribas de la Edad Media para 'fijar' el texto hebreo.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="Las paráfrasis arameas se conocen como Tárgumes, no como Texto Masorético.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Es una paráfrasis en arameo utilizada en las sinagogas cuando el pueblo olvidó el hebreo.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Las paráfrasis arameas se conocen como Tárgumes, no como Texto Masorético.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="No poseemos los manuscritos originales (autógrafos); el Texto Masorético es una preservación posterior muy fiel.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Representa los manuscritos originales escritos por el puño y letra de Moisés.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">No poseemos los manuscritos originales (autógrafos); el Texto Masorético es una preservación posterior muy fiel.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="Los masoretas realizaron una labor escrupulosa contando letras y palabras para evitar cualquier alteración del texto.">
+            <span class="opt-label">C</span>
+            <span class="opt-text">Fue el texto hebreo editado cuidadosamente por escribas judíos que añadieron puntos de vocales para preservar la pronunciación.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">Los masoretas realizaron una labor escrupulosa contando letras y palabras para evitar cualquier alteración del texto.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="La obra de San Jerónimo es la Vulgata; el Texto Masorético es en el idioma original hebreo.">
+            <span class="opt-label">D</span>
+            <span class="opt-text">Es la primera traducción al latín realizada por San Jerónimo en el siglo IV.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La obra de San Jerónimo es la Vulgata; el Texto Masorético es en el idioma original hebreo.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      
+        <div class="question" data-index="14">
+          <div class="q-header">
+            <span class="q-number">Pregunta 15</span>
+            <span class="q-of">/ 15</span>
+          </div>
+          <div class="q-text">Verdadero o Falso: La revisión de 1960 de la Biblia Reina-Valera destaca por haber actualizado vocablos en desuso manteniendo la belleza literaria de la obra original de Casiodoro de Reina.</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">Recuerde el propósito de las Sociedades Bíblicas Unidas al realizar esta revisión específica.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="La revisión de 1960 es precisamente la más aceptada en el ámbito hispano por su equilibrio entre actualización y tradición.">
+            <span class="opt-label">A</span>
+            <span class="opt-text">Falso</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">La revisión de 1960 es precisamente la más aceptada en el ámbito hispano por su equilibrio entre actualización y tradición.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="El objetivo fue mantener la fidelidad a los originales y la elegancia del castellano del Siglo de Oro eliminando arcaísmos confusos.">
+            <span class="opt-label">B</span>
+            <span class="opt-text">Verdadero</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">El objetivo fue mantener la fidelidad a los originales y la elegancia del castellano del Siglo de Oro eliminando arcaísmos confusos.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Siguiente pregunta →</button>
+        </div>
+      </div>
+  <div class="results" id="results">
+    <h2>¡Cuestionario completado!</h2>
+    <div class="score" id="score">0%</div>
+    <div class="score-text" id="score-text"></div>
+    <button class="restart-btn" onclick="restart()">Intentar de nuevo</button>
+  </div>
+</div>
+<script>
+const quizData = [{"question":"¿Cuál es la razón principal por la que se denomina a Guillermo Carey como el 'Padre de las misiones modernas' dentro del contexto de la Introducción a la Biblia?","hint":"Piense en la herramienta que Carey consideraba esencial para que el mensaje de Dios penetrara en la cultura local.","options":[{"label":"A","text":"Por su exclusiva dedicación a la predicación oral en las plazas públicas de la India sin recurrir a textos escritos.","isCorrect":false,"rationale":"Carey se destacó precisamente por lo contrario: su enorme esfuerzo en la traducción y producción de Biblias impresas."},{"label":"B","text":"Por su labor pionera en la traducción de las Escrituras a los idiomas vernáculos, permitiendo que millones en Asia tuvieran acceso al texto.","isCorrect":true,"rationale":"Carey sostenía que la efectividad del evangelismo dependía de la disponibilidad de la Biblia en la lengua materna de cada pueblo."},{"label":"C","text":"Por ser el primer misionero en utilizar la imprenta de tipos móviles en Europa para difundir el Nuevo Testamento.","isCorrect":false,"rationale":"La imprenta de tipos móviles fue inventada por Gutenberg mucho antes de la era de Carey."},{"label":"D","text":"Por haber descubierto los Rollos del Mar Muerto durante su estancia en el Oriente.","isCorrect":false,"rationale":"Los Rollos del Mar Muerto fueron hallados en 1947, mucho después del fallecimiento de Carey."}]},{"question":"¿Qué impacto lingüístico y cultural tuvo la traducción de la Biblia realizada por Martín Lutero en el siglo XVI?","hint":"Considere cómo una traducción puede influir en la identidad de una nación y su lenguaje.","options":[{"label":"A","text":"Fue una traducción técnica destinada exclusivamente a los eruditos y doctores de la Universidad de Wittenberg.","isCorrect":false,"rationale":"La Biblia de Lutero fue diseñada para ser entendida por el hombre común en su vida diaria."},{"label":"B","text":"Resultó en la eliminación total de los conceptos teóricos en favor de una lectura puramente filosófica.","isCorrect":false,"rationale":"Lutero mantuvo la profundidad teológica, pero la hizo accesible a través de la lengua materna."},{"label":"C","text":"Provocó que el latín se estableciera como la única lengua permitida para los cultos en Alemania.","isCorrect":false,"rationale":"El objetivo de Lutero era precisamente que el pueblo dejara de depender del latín para comprender la Palabra."},{"label":"D","text":"Unificó los dialectos germanos y se convirtió en la primera gran obra de arte de la prosa alemana moderna.","isCorrect":true,"rationale":"La traducción de Lutero no solo tuvo un impacto teológico, sino que sentó las bases del idioma alemán literario."}]},{"question":"El concepto de la Biblia como 'el misionero sin limitaciones' se refiere fundamentalmente a:","hint":"Reflexione sobre la persistencia del mensaje escrito frente a las prohibiciones impuestas a las personas.","options":[{"label":"A","text":"El hecho de que la Biblia no requiere traducción alguna para ser comprendida por cualquier cultura.","isCorrect":false,"rationale":"La traducción es un proceso esencial mencionado en el material para que el 'misionero' sea efectivo."},{"label":"B","text":"La capacidad del texto impreso para penetrar fronteras políticas y geográficas donde el predicador humano tiene prohibido el paso.","isCorrect":true,"rationale":"La Palabra escrita permanece y viaja de forma independiente, superando restricciones que detienen a los agentes humanos."},{"label":"C","text":"La distribución gratuita y masiva de ejemplares sin necesidad de traductores o sociedades bíblicas.","isCorrect":false,"rationale":"El éxito de la propagación ha dependido históricamente de la labor de traductores y organizaciones dedicadas."},{"label":"D","text":"Que la Biblia contiene toda la información científica necesaria para cualquier civilización.","isCorrect":false,"rationale":"El material enfatiza que la suficiencia de la Biblia radica en la verdad religiosa y el mensaje de redención."}]},{"question":"Según el análisis histórico de Kilgour, ¿cuál fue la causa principal de que la iglesia en el norte de África casi desapareciera en el siglo VII?","hint":"Compare la situación de esta región con la de Egipto o Siria, donde la iglesia sí sobrevivió.","options":[{"label":"A","text":"La ausencia de líderes teológicos importantes como Agustín o Tertuliano.","isCorrect":false,"rationale":"Esta región tuvo a los líderes más prominentes; el problema fue que el mensaje no llegó al pueblo en su propia lengua."},{"label":"B","text":"Las persecuciones romanas que destruyeron todos los manuscritos originales en el siglo IV.","isCorrect":false,"rationale":"La iglesia sobrevivió a las persecuciones romanas; el colapso ocurrió siglos después por la falta de arraigo bíblico vernáculo."},{"label":"C","text":"La falta de una traducción de las Escrituras al idioma vernáculo de la gente común.","isCorrect":true,"rationale":"A diferencia de otras regiones, la iglesia norafricana dependía del latín, lo que debilitó la fe del pueblo ante la invasión."},{"label":"D","text":"El exceso de traducciones disponibles que confundieron a los creyentes sobre el canon verdadero.","isCorrect":false,"rationale":"El problema no fue la abundancia de versiones, sino que el pueblo no tenía acceso a una que pudiera entender."}]},{"question":"En el trabajo de traducción de John Paton en las Nuevas Hébridas, ¿cómo se resolvió la ausencia de una palabra para el concepto de 'creer'?","hint":"Piense en la imagen de un hombre cansado que se desploma en una silla para descansar.","options":[{"label":"A","text":"Utilizando la expresión cultural 'descansar todo el peso sobre Cristo'.","isCorrect":true,"rationale":"Paton utilizó una analogía física cotidiana del pueblo para comunicar el significado profundo de la fe y la confianza."},{"label":"B","text":"Obligando al pueblo a aprender el término griego original para evitar errores teológicos.","isCorrect":false,"rationale":"La traducción misionera busca adaptar el mensaje al idioma receptor, no imponer lenguas extranjeras."},{"label":"C","text":"Inventando una palabra técnica nueva que no existía en el dialecto local.","isCorrect":false,"rationale":"Se prefirió buscar un modismo o imagen ya existente en su realidad para facilitar la comprensión."},{"label":"D","text":"Omitiendo el concepto del Nuevo Testamento para no generar confusión.","isCorrect":false,"rationale":"El concepto de fe es central en el evangelio y no puede ser omitido sin alterar el mensaje de salvación."}]},{"question":"Verdadero o Falso: Antes del año 1800 d.C., la Biblia ya había sido impresa en más de 200 idiomas gracias al inicio de las sociedades bíblicas.","hint":"Recuerde que el gran auge de las misiones modernas comenzó a finales del siglo XVIII.","options":[{"label":"A","text":"Falso","isCorrect":true,"rationale":"Para el año 1800 solo existían porciones impresas en 71 idiomas; la gran expansión ocurrió durante el siglo XIX."},{"label":"B","text":"Verdadero","isCorrect":false,"rationale":"Aunque hoy superamos los 1,200 idiomas, el progreso antes del siglo XIX fue mucho más lento."}]},{"question":"¿Qué lección fundamental sobre la preservación de la Palabra dejó la historia de la iglesia en Madagascar durante el siglo XIX?","hint":"Considere el resultado numérico de la iglesia malgache tras 25 años de prohibición.","options":[{"label":"A","text":"Que sin la guía constante de un pastor extranjero, la doctrina se corrompe inevitablemente en pocos años.","isCorrect":false,"rationale":"La historia de Madagascar demuestra precisamente la suficiencia de la Palabra bajo la guía del Espíritu Santo."},{"label":"B","text":"Que las Escrituras pueden sostener y hacer crecer a la iglesia incluso en ausencia de misioneros y bajo persecución extrema.","isCorrect":true,"rationale":"A pesar de la expulsión de misioneros, la iglesia creció diez veces gracias a las Biblias que el pueblo leyó en secreto."},{"label":"C","text":"Que es imposible que la fe sobreviva si el gobierno prohíbe la posesión de libros sagrados.","isCorrect":false,"rationale":"Los cristianos de Madagascar escondieron y enterraron Biblias, demostrando que la fe puede prevalecer."},{"label":"D","text":"Que la traducción de la Biblia es un proceso que debe detenerse si pone en riesgo la vida de los creyentes.","isCorrect":false,"rationale":"El sacrificio de los creyentes malgaches resalta el valor supremo que daban a tener la Palabra en su lengua."}]},{"question":"¿Qué característica física singular marcó la labor de traducción del obispo Schereschewsky en China?","hint":"Reflexione sobre el esfuerzo mecánico de escribir un texto tan largo con una movilidad extremadamente reducida.","options":[{"label":"A","text":"Fue el primer traductor en utilizar un código de signos para sordos en la Biblia china.","isCorrect":false,"rationale":"Aunque innovador, su trabajo se centró en la escritura a máquina del texto para el pueblo de habla mandarín."},{"label":"B","text":"Tradujo todo el Antiguo Testamento de memoria tras perder la vista en un incendio.","isCorrect":false,"rationale":"Schereschewsky no era ciego, sino que sufría de una enfermedad en la espina dorsal que limitaba su movilidad."},{"label":"C","text":"Realizó la traducción mientras vivía escondido en una cueva para evitar a los perseguidores.","isCorrect":false,"rationale":"Su desafío no fue la persecución política, sino su propia limitación física severa."},{"label":"D","text":"Completó la traducción escribiendo a máquina con solo un dedo de cada mano debido a su parálisis.","isCorrect":true,"rationale":"Su perseverancia durante 25 años como inválido es un testimonio del valor otorgado a la propagación bíblica."}]},{"question":"De acuerdo con el material de estudio, ¿cuál es el 'hilo conductor' o mensaje unificado que une los 66 libros de la Biblia?","hint":"Piense en el propósito por el cual Dios 'exhaló' Su Palabra a la humanidad.","options":[{"label":"A","text":"La historia detallada de las guerras y conquistas políticas de los reyes de Israel.","isCorrect":false,"rationale":"Aunque la historia de Israel es el contexto, el propósito final es espiritual y redentor."},{"label":"B","text":"El plan de redención divina para el hombre pecador a través de Jesucristo.","isCorrect":true,"rationale":"Toda la Biblia, desde el Génesis hasta el Apocalipsis, converge en el propósito salvífico de Dios."},{"label":"C","text":"La descripción científica del origen del universo y el fin del mundo físico.","isCorrect":false,"rationale":"El material aclara que la infalibilidad y autoridad de la Biblia se relacionan especialmente con la verdad religiosa."},{"label":"D","text":"Un compendio de reglas morales y éticas aplicables a cualquier religión del mundo.","isCorrect":false,"rationale":"La Biblia es más que un manual de ética; es una revelación específica de salvación."}]},{"question":"¿Por qué es fundamental afirmar que la Biblia es un libro 'divino-humano'?","hint":"Considere la analogía presentada en el texto sobre la doble naturaleza de Jesucristo.","options":[{"label":"A","text":"Porque indica que la mitad de la Biblia fue dictada por Dios y la otra mitad inventada por hombres.","isCorrect":false,"rationale":"La inspiración dinámica implica que Dios utilizó la totalidad de las facultades humanas bajo Su dirección."},{"label":"B","text":"Porque es la única forma de explicar por qué existen tantas traducciones diferentes hoy día.","isCorrect":false,"rationale":"La naturaleza divino-humana se refiere al origen del texto original, no a la historia de las traducciones posteriores."},{"label":"C","text":"Porque permite separar las verdades divinas de los 'errores' culturales de los autores humanos.","isCorrect":false,"rationale":"La inspiración plenaria afirma que Dios supervisó todo el texto para que la verdad religiosa fuera sin error."},{"label":"D","text":"Porque reconoce a Dios como causa primaria y al hombre como instrumento activo que aporta su estilo y contexto.","isCorrect":true,"rationale":"Esta naturaleza dual garantiza una revelación infalible comunicada a través de medios comprensibles para el ser humano."}]},{"question":"¿Qué significa el término griego 'Teopneustos' mencionado en 2 Timoteo 3:16?","hint":"Relacione el término con la acción vital de los pulmones aplicada metafóricamente a Dios.","options":[{"label":"A","text":"Escrito directamente desde el cielo.","isCorrect":false,"rationale":"Dios utilizó autores humanos como instrumentos; no envió un libro ya encuadernado desde el cielo."},{"label":"B","text":"Respirado o exhalado por Dios.","isCorrect":true,"rationale":"Este término define la esencia de la inspiración: la Escritura es producto del 'aliento' divino."},{"label":"C","text":"Aprobado por los concilios de la iglesia.","isCorrect":false,"rationale":"La inspiración es una cualidad intrínseca del origen del texto, no una aprobación posterior humana."},{"label":"D","text":"Traducido fielmente de los originales.","isCorrect":false,"rationale":"Teopneustos se refiere al proceso de generación del texto sagrado, no a su traducción."}]},{"question":"En la formación del canon, ¿cuál fue la postura de la Iglesia Protestante respecto a los libros apócrifos?","hint":"Recuerde qué versión del Antiguo Testamento (Hebrea o Griega) decidieron seguir los reformadores.","options":[{"label":"A","text":"Los excluyó del canon por no encontrarse en la Biblia hebrea y presentar inconsistencias doctrinales.","isCorrect":true,"rationale":"La falta de evidencia de inspiración divina y errores teológicos motivaron su exclusión como norma de fe."},{"label":"B","text":"Los aceptó como igualmente inspirados que el Pentateuco para mantener la unidad con la Vulgata.","isCorrect":false,"rationale":"Fue la Iglesia Católica la que reafirmó su canonicidad, mientras que la Reforma los cuestionó."},{"label":"C","text":"Decidió quemarlos todos para evitar que los laicos leyeran historias legendarias.","isCorrect":false,"rationale":"Lutero y otros los consideraban útiles para la historia o edificación, pero no para establecer doctrina."},{"label":"D","text":"Los consideró como la 'sabiduría secreta' que solo los pastores debían conocer.","isCorrect":false,"rationale":"El término 'apócrifo' fue usado por críticos para señalar su origen espurio, no una sabiduría oculta positiva."}]},{"question":"¿Qué importancia histórica tuvieron los Rollos del Mar Muerto (1947) para la confianza en el Antiguo Testamento?","hint":"Considere la brecha temporal entre estos manuscritos y las copias masoréticas más antiguas que se tenían antes.","options":[{"label":"A","text":"Confirmaron que el texto hebreo se mantuvo prácticamente inalterado durante mil años de transmisión.","isCorrect":true,"rationale":"Al comparar el texto de Isaías de Qumrán con el Texto Masorético, la fidelidad de los copistas quedó demostrada."},{"label":"B","text":"Revelaron que los profetas del Antiguo Testamento no escribieron sus propios libros.","isCorrect":false,"rationale":"Los rollos confirmaron la antigüedad y autenticidad de los escritos proféticos conocidos."},{"label":"C","text":"Probaron que la Septuaginta era la única versión inspirada por Dios.","isCorrect":false,"rationale":"Aunque hay paralelos, los rollos reforzaron principalmente la autoridad del texto hebreo original."},{"label":"D","text":"Demostraron que el Nuevo Testamento fue escrito originalmente en hebreo y no en griego.","isCorrect":false,"rationale":"Los hallazgos de Qumrán se centran casi exclusivamente en el Antiguo Testamento y literatura sectaria judía."}]},{"question":"¿Cuál es la función del 'Texto Masorético' en la historia de la Biblia?","hint":"Piense en la labor de los escribas de la Edad Media para 'fijar' el texto hebreo.","options":[{"label":"A","text":"Es una paráfrasis en arameo utilizada en las sinagogas cuando el pueblo olvidó el hebreo.","isCorrect":false,"rationale":"Las paráfrasis arameas se conocen como Tárgumes, no como Texto Masorético."},{"label":"B","text":"Representa los manuscritos originales escritos por el puño y letra de Moisés.","isCorrect":false,"rationale":"No poseemos los manuscritos originales (autógrafos); el Texto Masorético es una preservación posterior muy fiel."},{"label":"C","text":"Fue el texto hebreo editado cuidadosamente por escribas judíos que añadieron puntos de vocales para preservar la pronunciación.","isCorrect":true,"rationale":"Los masoretas realizaron una labor escrupulosa contando letras y palabras para evitar cualquier alteración del texto."},{"label":"D","text":"Es la primera traducción al latín realizada por San Jerónimo en el siglo IV.","isCorrect":false,"rationale":"La obra de San Jerónimo es la Vulgata; el Texto Masorético es en el idioma original hebreo."}]},{"question":"Verdadero o Falso: La revisión de 1960 de la Biblia Reina-Valera destaca por haber actualizado vocablos en desuso manteniendo la belleza literaria de la obra original de Casiodoro de Reina.","hint":"Recuerde el propósito de las Sociedades Bíblicas Unidas al realizar esta revisión específica.","options":[{"label":"A","text":"Falso","isCorrect":false,"rationale":"La revisión de 1960 es precisamente la más aceptada en el ámbito hispano por su equilibrio entre actualización y tradición."},{"label":"B","text":"Verdadero","isCorrect":true,"rationale":"El objetivo fue mantener la fidelidad a los originales y la elegancia del castellano del Siglo de Oro eliminando arcaísmos confusos."}]}];
+const tr = {"correct":"¡Correcto!","incorrect":"Incorrecto","next":"Siguiente pregunta →","seeResults":"Ver resultados","complete":"¡Cuestionario completado!","scoreText":"Obtuviste {correct} de {total} correctas","tryAgain":"Intentar de nuevo","rightAnswer":"Respuesta correcta","notQuite":"No del todo"};
+let currentQ = 0, correctCount = 0, answered = false;
+
+function init() {
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === 0));
+  updateProgress();
+  document.querySelectorAll('.option').forEach(opt => opt.addEventListener('click', () => selectOption(opt)));
+  document.querySelectorAll('.next-btn').forEach(btn => btn.addEventListener('click', nextQuestion));
+}
+
+function selectOption(opt) {
+  if (answered) return;
+  answered = true;
+  const q = opt.closest('.question');
+  const options = q.querySelectorAll('.option');
+  const nextBtn = q.querySelector('.next-btn');
+  const isCorrect = opt.dataset.correct === 'true';
+  
+  // Mark all options as disabled
+  options.forEach(o => o.classList.add('disabled'));
+  
+  // Style selected option
+  opt.classList.add('selected', isCorrect ? 'correct' : 'incorrect');
+  
+  // Show correct answer if wrong
+  if (!isCorrect) {
+    const correctOpt = [...options].find(o => o.dataset.correct === 'true');
+    if (correctOpt) correctOpt.classList.add('show-correct');
+  }
+  
+  if (isCorrect) correctCount++;
+  
+  // Show feedback for ALL options that have rationale
+  options.forEach(o => {
+    const wrapper = o.closest('.option-wrapper');
+    const feedback = wrapper.querySelector('.option-feedback');
+    const rationale = o.dataset.rationale;
+    const isThisCorrect = o.dataset.correct === 'true';
+    
+    if (rationale && rationale.trim()) {
+      feedback.classList.remove('hidden');
+      feedback.classList.add(isThisCorrect ? 'correct-feedback' : 'incorrect-feedback');
+      
+      const statusEl = feedback.querySelector('.feedback-status');
+      statusEl.className = 'feedback-status ' + (isThisCorrect ? 'correct' : 'incorrect');
+      statusEl.innerHTML = isThisCorrect 
+        ? '✓ ' + tr.rightAnswer
+        : '✗ ' + tr.notQuite;
+    }
+  });
+  
+  nextBtn.classList.remove('hidden');
+  if (currentQ === quizData.length - 1) nextBtn.textContent = tr.seeResults;
+}
+
+function nextQuestion() {
+  answered = false;
+  currentQ++;
+  if (currentQ >= quizData.length) { showResults(); return; }
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === currentQ));
+  updateProgress();
+}
+
+function updateProgress() {
+  document.querySelector('.progress-fill').style.width = (currentQ / quizData.length * 100) + '%';
+}
+
+function showResults() {
+  document.querySelectorAll('.question').forEach(q => q.classList.remove('active'));
+  document.getElementById('results').classList.add('active');
+  const pct = Math.round((correctCount / quizData.length) * 100);
+  document.getElementById('score').textContent = pct + '%';
+  document.getElementById('score-text').textContent = tr.scoreText.replace('{correct}', correctCount).replace('{total}', quizData.length);
+  document.querySelector('.progress-fill').style.width = '100%';
+}
+
+function restart() {
+  currentQ = 0; correctCount = 0; answered = false;
+  document.getElementById('results').classList.remove('active');
+  document.querySelectorAll('.question').forEach((q, i) => {
+    q.classList.toggle('active', i === 0);
+    q.querySelectorAll('.option').forEach(o => o.classList.remove('selected', 'correct', 'incorrect', 'disabled', 'show-correct'));
+    q.querySelectorAll('.option-feedback').forEach(f => {
+      f.classList.add('hidden');
+      f.classList.remove('correct-feedback', 'incorrect-feedback');
+    });
+    const btn = q.querySelector('.next-btn');
+    btn.classList.add('hidden');
+    btn.textContent = tr.next;
+  });
+  updateProgress();
+}
+
+init();
+</script>
+</body>
+</html>

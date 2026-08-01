@@ -3,22 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cuestionarios - Lista Automática</title>
+  <title>Cuestionarios - Seminario Bíblico Argentina</title>
   
+  <!-- Tipografía institucional elegante -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
     :root {
-      --primary: #1a73e8;
-      --primary-hover: #1557b0;
-      --bg-color: #f8f9fa;
-      --card-bg: #ffffff;
-      --text-main: #202124;
-      --text-muted: #5f6368;
-      --border-color: #dadce0;
-      --hover-bg: #f1f3f4;
+      --primary-navy: #0B2545;
+      --accent-gold: #C5A059;
+      --accent-gold-hover: #B38E46;
+      --bg-color: #F4F6F9;
+      --card-bg: #FFFFFF;
+      --text-main: #1D2A3A;
+      --text-muted: #5A6A80;
+      --border-color: #E2E8F0;
     }
 
     * {
@@ -29,58 +30,84 @@
     }
 
     body {
-      font-family: 'Roboto', sans-serif;
+      font-family: 'Montserrat', sans-serif;
       background-color: var(--bg-color);
       color: var(--text-main);
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
       min-height: 100vh;
-      padding: 16px;
+      padding: 0 0 24px 0;
     }
 
+    /* Encabezado Institucional estilo SBA */
+    .header-bar {
+      width: 100%;
+      background-color: var(--primary-navy);
+      color: #FFFFFF;
+      padding: 24px 16px;
+      text-align: center;
+      border-bottom: 4px solid var(--accent-gold);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin-bottom: 24px;
+    }
+
+    .brand-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .subtitle-main {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 4px;
+    }
+
+    .subtitle-sub {
+      font-size: 0.85rem;
+      color: #D0D7DE;
+      font-weight: 400;
+    }
+
+    /* Contenedor principal responsive */
     .container {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 16px;
       padding: 24px 20px;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 1px 3px rgba(60,64,67,0.08), 0 4px 8px rgba(60,64,67,0.04);
+      width: 92%;
+      max-width: 520px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
     }
 
-    .header {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .badge {
-      display: inline-block;
-      background-color: #e8f0fe;
-      color: var(--primary);
-      font-family: 'Google Sans', sans-serif;
-      font-size: 0.75rem;
+    .section-title {
+      font-size: 0.95rem;
       font-weight: 700;
-      padding: 4px 12px;
-      border-radius: 12px;
+      color: var(--primary-navy);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    h1 {
-      font-family: 'Google Sans', sans-serif;
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 8px;
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background-color: var(--accent-gold);
+      border-radius: 2px;
     }
 
-    p.subtitle {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
-
+    /* Selector desplegable estilizado */
     .select-wrapper {
       margin-bottom: 16px;
       position: relative;
@@ -89,22 +116,28 @@
     select {
       width: 100%;
       padding: 14px 16px;
-      font-size: 0.95rem;
-      font-family: inherit;
+      font-size: 0.9rem;
+      font-family: 'Montserrat', sans-serif;
       color: var(--text-main);
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
+      background-color: #FAFAFA;
+      border: 1.5px solid var(--border-color);
       border-radius: 10px;
       appearance: none;
       -webkit-appearance: none;
       outline: none;
       cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    select:focus {
+      border-color: var(--accent-gold);
+      background-color: #FFFFFF;
     }
 
     .select-wrapper::after {
       content: "▼";
       font-size: 0.7rem;
-      color: var(--text-muted);
+      color: var(--accent-gold);
       position: absolute;
       right: 16px;
       top: 50%;
@@ -115,28 +148,32 @@
     .btn-primary {
       width: 100%;
       padding: 14px;
-      background-color: var(--primary);
-      color: #ffffff;
-      border: none;
+      background-color: var(--primary-navy);
+      color: #FFFFFF;
+      border: 1px solid var(--accent-gold);
       border-radius: 10px;
-      font-family: 'Google Sans', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 500;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
       cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
     }
 
     .btn-primary:active {
       transform: scale(0.98);
-      background-color: var(--primary-hover);
+      background-color: #06172E;
     }
 
     .divider {
       display: flex;
       align-items: center;
       text-align: center;
-      margin: 20px 0;
+      margin: 24px 0 16px 0;
       color: var(--text-muted);
-      font-size: 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
     }
 
     .divider::before, .divider::after {
@@ -149,86 +186,112 @@
       padding: 0 10px;
     }
 
+    /* Lista dinámica de cuestionarios */
     .quiz-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     .quiz-card {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 16px;
-      background-color: var(--card-bg);
+      padding: 16px 18px;
+      background-color: #FFFFFF;
       border: 1px solid var(--border-color);
+      border-left: 4px solid var(--accent-gold);
       border-radius: 10px;
       text-decoration: none;
       color: var(--text-main);
-      font-family: 'Google Sans', sans-serif;
       font-size: 0.9rem;
-      font-weight: 500;
-      word-break: break-word;
+      font-weight: 600;
+      line-height: 1.4;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
     }
 
-    .quiz-card:active, .quiz-card:hover {
-      background-color: var(--hover-bg);
+    .quiz-card:hover, .quiz-card:active {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      border-color: var(--accent-gold);
+      background-color: #FDFBF7;
     }
 
     .quiz-card .icon {
-      color: var(--primary);
+      color: var(--accent-gold);
       font-weight: bold;
-      font-size: 1.1rem;
-      margin-left: 8px;
+      font-size: 1.2rem;
+      margin-left: 12px;
+      flex-shrink: 0;
     }
 
     .status-msg {
       text-align: center;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
-      padding: 10px 0;
+      padding: 16px 0;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="header">
-      <span class="badge">Evaluaciones</span>
-      <h1>Cuestionarios Disponibles</h1>
-      <p class="subtitle">Selecciona o pulsa el cuestionario que deseas responder</p>
-    </div>
+  <!-- Cabecera estilo Seminario Bíblico -->
+  <header class="header-bar">
+    <div class="brand-title">Instituto Redformar</div>
+    <div class="subtitle-main">Seminario Bíblico Argentina</div>
+    <div class="subtitle-sub">Portal de Cuestionarios e Evaluaciones</div>
+  </header>
 
-    <!-- Menú desplegable -->
+  <main class="container">
+    <div class="section-title">Selección Rápida</div>
+
+    <!-- Selector desplegable -->
     <div class="select-wrapper">
       <select id="quizSelect">
-        <option value="" disabled selected>Cargando lista...</option>
+        <option value="" disabled selected>Cargando cuestionarios...</option>
       </select>
     </div>
 
-    <button class="btn-primary" onclick="abrirCuestionario()">Iniciar Cuestionario</button>
+    <button class="btn-primary" onclick="abrirCuestionario()">ABRIR CUESTIONARIO</button>
 
     <div class="divider">
-      <span>CUESTIONARIOS DETECTADOS</span>
+      <span>CUESTIONARIOS DISPONIBLES</span>
     </div>
 
-    <!-- Contenedor dinámico de botones -->
+    <!-- Lista que se auto-genera -->
     <div class="quiz-list" id="quizList">
-      <div class="status-msg">Buscando cuestionarios en el repositorio...</div>
+      <div class="status-msg">Cargando evaluaciones del servidor...</div>
     </div>
-  </div>
+  </main>
 
   <script>
-    // Se extrae automáticamente el usuario y repositorio según el dominio actual
+    // Extrae usuario y repositorio del entorno actual de GitHub Pages
     let username = window.location.hostname.split('.')[0];
     let pathSegments = window.location.pathname.split('/').filter(Boolean);
     let repoName = pathSegments.length > 0 ? pathSegments[0] : '';
 
-    // En caso de probarlo de forma local o alternativa, valores por defecto de tu repositorio
     if (!username || username === 'localhost') username = 'institutoredformar-coder';
     if (!repoName) repoName = 'cuestionariointroduccionalabiblia1';
 
     const apiUrl = `https://api.github.com/repos/${username}/${repoName}/contents/`;
+
+    // Función para limpiar nombres sin deformar tildes ni mayúsculas
+    function formatearNombre(nombreArchivo) {
+      let nombre = nombreArchivo.replace(/\.html$/i, '');
+      
+      // Reemplaza guiones y guiones bajos por espacios
+      nombre = nombre.replace(/[-_]/g, ' ');
+
+      // Remueve la palabra "interactive" o "interactivo" al final si existe
+      nombre = nombre.replace(/\binteractive\b/gi, '').replace(/\binteractivo\b/gi, '');
+
+      // Normalización suave de espacios
+      nombre = nombre.trim().replace(/\s+/g, ' ');
+
+      // Formatear correctamente sin romper caracteres con acento
+      return nombre.replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+    }
 
     async function cargarCuestionarios() {
       const select = document.getElementById('quizSelect');
@@ -236,37 +299,33 @@
 
       try {
         const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error('No se pudo acceder al repositorio');
+        if (!response.ok) throw new Error('Error de conexión');
 
         const files = await response.json();
 
-        // Filtrar solo archivos .html excluyendo 'index.html'
+        // Filtra únicamente archivos .html descartando index.html
         const htmlFiles = files.filter(file => 
-          file.name.endsWith('.html') && file.name.toLowerCase() !== 'index.html'
+          file.name.toLowerCase().endsWith('.html') && file.name.toLowerCase() !== 'index.html'
         );
 
-        select.innerHTML = '<option value="" disabled selected>Elige un cuestionario...</option>';
+        select.innerHTML = '<option value="" disabled selected>Elija un cuestionario...</option>';
         listContainer.innerHTML = '';
 
         if (htmlFiles.length === 0) {
-          listContainer.innerHTML = '<div class="status-msg">No se encontraron cuestionarios adicionales.</div>';
+          listContainer.innerHTML = '<div class="status-msg">No hay cuestionarios cargados aún.</div>';
           return;
         }
 
         htmlFiles.forEach(file => {
-          // Formatear el nombre visible (ej: cuestionario1.html -> Cuestionario 1)
-          let nombreLimpio = file.name
-            .replace('.html', '')
-            .replace(/[-_]/g, ' ')
-            .replace(/\b\w/g, l => l.toUpperCase());
+          const nombreLimpio = formatearNombre(file.name);
 
-          // Añadir opción al menú desplegable
+          // Opción para el menú desplegable
           const option = document.createElement('option');
           option.value = file.name;
           option.textContent = nombreLimpio;
           select.appendChild(option);
 
-          // Crear tarjeta con enlace directo
+          // Tarjeta táctil independiente
           const card = document.createElement('a');
           card.className = 'quiz-card';
           card.href = file.name;
@@ -276,7 +335,7 @@
 
       } catch (error) {
         select.innerHTML = '<option value="" disabled selected>Error al cargar</option>';
-        listContainer.innerHTML = `<div class="status-msg">No se pudieron listar los archivos automáticamente.</div>`;
+        listContainer.innerHTML = `<div class="status-msg">No se pudo obtener la lista de cuestionarios.</div>`;
       }
     }
 
@@ -286,11 +345,10 @@
       if (url) {
         window.location.href = url;
       } else {
-        alert('Por favor selecciona un cuestionario de la lista.');
+        alert('Por favor, selecciona un cuestionario de la lista.');
       }
     }
 
-    // Cargar la lista automáticamente al abrir la página
     window.onload = cargarCuestionarios;
   </script>
 

@@ -1,356 +1,451 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cuestionarios - Seminario Bíblico Argentina</title>
-  
-  <!-- Tipografía institucional elegante -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <style>
-    :root {
-      --primary-navy: #0B2545;
-      --accent-gold: #C5A059;
-      --accent-gold-hover: #B38E46;
-      --bg-color: #F4F6F9;
-      --card-bg: #FFFFFF;
-      --text-main: #1D2A3A;
-      --text-muted: #5A6A80;
-      --border-color: #E2E8F0;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cuestionarios · Seminario Bíblico Argentina</title>
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      padding: 0 0 24px 0;
-    }
+<style>
+  :root{
+    --navy: #17264a;
+    --navy-soft: #223163;
+    --gold: #c69a3d;
+    --gold-soft: #e7d7ab;
+    --cream: #faf6ec;
+    --card-bg: #ffffff;
+    --text-main: #1f2433;
+    --text-muted: #6b7280;
+    --border-color: #e7e0cf;
+    --shadow: 0 1px 2px rgba(23,38,74,0.06), 0 12px 28px -12px rgba(23,38,74,0.18);
+  }
 
-    /* Encabezado Institucional estilo SBA */
-    .header-bar {
-      width: 100%;
-      background-color: var(--primary-navy);
-      color: #FFFFFF;
-      padding: 24px 16px;
-      text-align: center;
-      border-bottom: 4px solid var(--accent-gold);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      margin-bottom: 24px;
-    }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
 
-    .brand-title {
-      font-family: 'Cinzel', serif;
-      font-size: 1.1rem;
-      letter-spacing: 2px;
-      color: var(--accent-gold);
-      text-transform: uppercase;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
+  html{ scroll-behavior:smooth; }
 
-    .subtitle-main {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #FFFFFF;
-      margin-bottom: 4px;
-    }
+  body{
+    font-family:'Inter', sans-serif;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #223163 0%, var(--navy) 55%, var(--navy) 100%);
+    color:var(--text-main);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:clamp(16px, 5vw, 48px) 16px;
+  }
 
-    .subtitle-sub {
-      font-size: 0.85rem;
-      color: #D0D7DE;
-      font-weight: 400;
-    }
+  .page{
+    width:100%;
+    max-width:560px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
 
-    /* Contenedor principal responsive */
-    .container {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 24px 20px;
-      width: 92%;
-      max-width: 520px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    }
+  /* --- Cabecera tipo "sello" del seminario --- */
+  .crest{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    color:var(--gold-soft);
+    padding:6px 12px 4px;
+  }
 
-    .section-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--primary-navy);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+  .crest svg{ width:42px; height:42px; margin-bottom:10px; }
 
-    .section-title::before {
-      content: '';
-      display: inline-block;
-      width: 4px;
-      height: 16px;
-      background-color: var(--accent-gold);
-      border-radius: 2px;
-    }
+  .crest .kicker{
+    font-family:'Inter', sans-serif;
+    font-size:0.72rem;
+    font-weight:700;
+    letter-spacing:2.5px;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:6px;
+  }
 
-    /* Selector desplegable estilizado */
-    .select-wrapper {
-      margin-bottom: 16px;
-      position: relative;
-    }
+  .crest h1{
+    font-family:'Playfair Display', serif;
+    font-weight:800;
+    font-size:clamp(1.5rem, 5vw, 1.9rem);
+    color:#fff;
+    line-height:1.2;
+  }
 
-    select {
-      width: 100%;
-      padding: 14px 16px;
-      font-size: 0.9rem;
-      font-family: 'Montserrat', sans-serif;
-      color: var(--text-main);
-      background-color: #FAFAFA;
-      border: 1.5px solid var(--border-color);
-      border-radius: 10px;
-      appearance: none;
-      -webkit-appearance: none;
-      outline: none;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
+  .crest p{
+    margin-top:8px;
+    font-size:0.92rem;
+    color:#c7cee3;
+    max-width:38ch;
+  }
 
-    select:focus {
-      border-color: var(--accent-gold);
-      background-color: #FFFFFF;
-    }
+  .rule{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:var(--gold);
+    opacity:0.85;
+  }
+  .rule::before, .rule::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .rule span{ font-size:1rem; }
 
-    .select-wrapper::after {
-      content: "▼";
-      font-size: 0.7rem;
-      color: var(--accent-gold);
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none;
-    }
+  /* --- Tarjeta principal --- */
+  .container{
+    background:var(--card-bg);
+    border-radius:20px;
+    padding:28px 24px;
+    box-shadow:var(--shadow);
+    border:1px solid rgba(255,255,255,0.6);
+  }
 
-    .btn-primary {
-      width: 100%;
-      padding: 14px;
-      background-color: var(--primary-navy);
-      color: #FFFFFF;
-      border: 1px solid var(--accent-gold);
-      border-radius: 10px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-    }
+  .section-label{
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-size:1.05rem;
+    color:var(--navy);
+    margin-bottom:4px;
+  }
 
-    .btn-primary:active {
-      transform: scale(0.98);
-      background-color: #06172E;
-    }
+  .section-sub{
+    font-size:0.85rem;
+    color:var(--text-muted);
+    margin-bottom:16px;
+  }
 
-    .divider {
-      display: flex;
-      align-items: center;
-      text-align: center;
-      margin: 24px 0 16px 0;
-      color: var(--text-muted);
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
+  .select-wrapper{ margin-bottom:12px; position:relative; }
 
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      border-bottom: 1px solid var(--border-color);
-    }
+  select{
+    width:100%;
+    padding:14px 42px 14px 16px;
+    font-size:0.95rem;
+    font-family:inherit;
+    color:var(--text-main);
+    background-color:#fbfaf5;
+    border:1.5px solid var(--border-color);
+    border-radius:12px;
+    appearance:none;
+    -webkit-appearance:none;
+    outline:none;
+    cursor:pointer;
+    transition:border-color .15s ease;
+  }
+  select:focus-visible{
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(198,154,61,0.25);
+  }
 
-    .divider span {
-      padding: 0 10px;
-    }
+  .select-wrapper::after{
+    content:"▾";
+    font-size:1rem;
+    color:var(--navy);
+    position:absolute;
+    right:16px;
+    top:50%;
+    transform:translateY(-50%);
+    pointer-events:none;
+  }
 
-    /* Lista dinámica de cuestionarios */
-    .quiz-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+  .btn-primary{
+    width:100%;
+    padding:14px;
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    font-family:'Inter', sans-serif;
+    font-size:0.95rem;
+    font-weight:600;
+    letter-spacing:0.2px;
+    cursor:pointer;
+    transition:background-color .15s ease, transform .05s ease;
+  }
+  .btn-primary:hover{ background:var(--navy-soft); }
+  .btn-primary:active{ transform:scale(0.98); }
+  .btn-primary:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
 
-    .quiz-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 18px;
-      background-color: #FFFFFF;
-      border: 1px solid var(--border-color);
-      border-left: 4px solid var(--accent-gold);
-      border-radius: 10px;
-      text-decoration: none;
-      color: var(--text-main);
-      font-size: 0.9rem;
-      font-weight: 600;
-      line-height: 1.4;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-    }
+  .divider{
+    display:flex;
+    align-items:center;
+    text-align:center;
+    margin:22px 0 14px;
+    color:var(--text-muted);
+    font-size:0.72rem;
+    font-weight:700;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+  }
+  .divider::before, .divider::after{
+    content:'';
+    flex:1;
+    border-bottom:1px solid var(--border-color);
+  }
+  .divider span{ padding:0 10px; }
 
-    .quiz-card:hover, .quiz-card:active {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      border-color: var(--accent-gold);
-      background-color: #FDFBF7;
-    }
+  .quiz-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
 
-    .quiz-card .icon {
-      color: var(--accent-gold);
-      font-weight: bold;
-      font-size: 1.2rem;
-      margin-left: 12px;
-      flex-shrink: 0;
-    }
+  .quiz-card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 14px;
+    background-color:#fdfcf8;
+    border:1px solid var(--border-color);
+    border-radius:12px;
+    text-decoration:none;
+    color:var(--text-main);
+    font-family:'Inter', sans-serif;
+    font-size:0.92rem;
+    font-weight:600;
+    word-break:break-word;
+    transition:background-color .15s ease, border-color .15s ease, transform .05s ease;
+  }
+  .quiz-card:hover{
+    background-color:var(--gold-soft);
+    border-color:var(--gold);
+  }
+  .quiz-card:active{ transform:scale(0.99); }
 
-    .status-msg {
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      padding: 16px 0;
-    }
-  </style>
+  .quiz-card .num{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:30px; height:30px;
+    border-radius:50%;
+    background:var(--navy);
+    color:var(--gold-soft);
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-size:0.8rem;
+  }
+
+  .quiz-card .label{ flex:1; }
+
+  .quiz-card .icon{
+    color:var(--gold);
+    font-weight:bold;
+    font-size:1.15rem;
+    flex:0 0 auto;
+  }
+
+  .status-msg{
+    text-align:center;
+    font-size:0.9rem;
+    color:var(--text-muted);
+    padding:14px 0;
+  }
+
+  .status-msg.error{ color:#b3432b; }
+
+  footer.credit{
+    text-align:center;
+    font-size:0.75rem;
+    color:#c7cee3;
+    padding:4px 8px 0;
+  }
+  footer.credit a{ color:var(--gold-soft); text-decoration:none; }
+
+  @media (max-width:400px){
+    .container{ padding:22px 18px; border-radius:16px; }
+    .crest h1{ font-size:1.4rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; scroll-behavior:auto !important; }
+  }
+</style>
 </head>
 <body>
 
-  <!-- Cabecera estilo Seminario Bíblico -->
-  <header class="header-bar">
-    <div class="brand-title">Instituto Redformar</div>
-    <div class="subtitle-main">Seminario Bíblico Argentina</div>
-    <div class="subtitle-sub">Portal de Cuestionarios e Evaluaciones</div>
-  </header>
+<div class="page">
 
-  <main class="container">
-    <div class="section-title">Selección Rápida</div>
+  <div class="crest">
+    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M24 4 L24 30" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M12 12 H36" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M14 30 C14 38 34 38 34 30" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+      <circle cx="24" cy="30" r="1.6" fill="currentColor"/>
+    </svg>
+    <span class="kicker">Evaluaciones</span>
+    <h1>Cuestionarios Disponibles</h1>
+    <p>Seleccioná o pulsá el cuestionario que deseás responder para continuar tu formación.</p>
+  </div>
 
-    <!-- Selector desplegable -->
+  <div class="container">
+
+    <div class="section-label">Iniciar cuestionario</div>
+    <div class="section-sub">Elegí uno del listado y comenzá cuando estés listo.</div>
+
     <div class="select-wrapper">
-      <select id="quizSelect">
-        <option value="" disabled selected>Cargando cuestionarios...</option>
+      <select id="quizSelect" aria-label="Selecciona un cuestionario">
+        <option value="" disabled selected>Cargando lista...</option>
       </select>
     </div>
 
-    <button class="btn-primary" onclick="abrirCuestionario()">ABRIR CUESTIONARIO</button>
+    <button class="btn-primary" onclick="abrirCuestionario()">Iniciar Cuestionario</button>
 
-    <div class="divider">
-      <span>CUESTIONARIOS DISPONIBLES</span>
-    </div>
+    <div class="divider"><span>Cuestionarios detectados</span></div>
 
-    <!-- Lista que se auto-genera -->
     <div class="quiz-list" id="quizList">
-      <div class="status-msg">Cargando evaluaciones del servidor...</div>
+      <div class="status-msg">Buscando cuestionarios en el repositorio…</div>
     </div>
-  </main>
 
-  <script>
-    // Extrae usuario y repositorio del entorno actual de GitHub Pages
-    let username = window.location.hostname.split('.')[0];
-    let pathSegments = window.location.pathname.split('/').filter(Boolean);
-    let repoName = pathSegments.length > 0 ? pathSegments[0] : '';
+  </div>
 
-    if (!username || username === 'localhost') username = 'institutoredformar-coder';
-    if (!repoName) repoName = 'cuestionariointroduccionalabiblia1';
+  <footer class="credit">Seminario Bíblico Argentina</footer>
 
-    const apiUrl = `https://api.github.com/repos/${username}/${repoName}/contents/`;
+</div>
 
-    // Función para limpiar nombres sin deformar tildes ni mayúsculas
-    function formatearNombre(nombreArchivo) {
-      let nombre = nombreArchivo.replace(/\.html$/i, '');
-      
-      // Reemplaza guiones y guiones bajos por espacios
-      nombre = nombre.replace(/[-_]/g, ' ');
+<script>
+(function(){
 
-      // Remueve la palabra "interactive" o "interactivo" al final si existe
-      nombre = nombre.replace(/\binteractive\b/gi, '').replace(/\binteractivo\b/gi, '');
+  // ---------- Configuración: usuario y repositorio ----------
+  let username = window.location.hostname.split('.')[0];
+  let pathSegments = window.location.pathname.split('/').filter(Boolean);
+  let repoName = pathSegments.length > 0 ? pathSegments[0] : '';
 
-      // Normalización suave de espacios
-      nombre = nombre.trim().replace(/\s+/g, ' ');
+  if (!username || username === 'localhost') username = 'institutoredformar-coder';
+  if (!repoName) repoName = 'cuestionariointroduccionalabiblia1';
 
-      // Formatear correctamente sin romper caracteres con acento
-      return nombre.replace(/(^\w|\s\w)/g, m => m.toUpperCase());
-    }
+  const apiUrl = `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/contents/`;
 
-    async function cargarCuestionarios() {
-      const select = document.getElementById('quizSelect');
-      const listContainer = document.getElementById('quizList');
+  // ---------- Utilidades de formato de nombre ----------
 
-      try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error('Error de conexión');
+  // Detecta si una palabra es un número romano válido (I, II, III, IV ... hasta miles)
+  function esNumeroRomano(palabra){
+    return /^(?=[mdclxvi])m*(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$/i.test(palabra) && palabra.length > 0;
+  }
 
-        const files = await response.json();
+  // Capitaliza una palabra respetando acentos y ñ (usa métodos localizados,
+  // no regex \w que ignora caracteres acentuados)
+  function capitalizar(palabra){
+    if (!palabra) return palabra;
+    const primera = palabra.charAt(0).toLocaleUpperCase('es');
+    const resto = palabra.slice(1).toLocaleLowerCase('es');
+    return primera + resto;
+  }
 
-        // Filtra únicamente archivos .html descartando index.html
-        const htmlFiles = files.filter(file => 
-          file.name.toLowerCase().endsWith('.html') && file.name.toLowerCase() !== 'index.html'
-        );
+  // Convierte "leccion-iii-la-oracion.html" -> "Lección III La Oración"
+  // (los números romanos quedan en mayúsculas, los acentos se preservan)
+  function nombreLegible(nombreArchivo){
+    let base = nombreArchivo.replace(/\.html?$/i, '');
 
-        select.innerHTML = '<option value="" disabled selected>Elija un cuestionario...</option>';
-        listContainer.innerHTML = '';
+    // Por si el nombre viene con codificación de URL (%C3%B3, etc.)
+    try { base = decodeURIComponent(base); } catch(e) { /* ya estaba decodificado */ }
 
-        if (htmlFiles.length === 0) {
-          listContainer.innerHTML = '<div class="status-msg">No hay cuestionarios cargados aún.</div>';
-          return;
-        }
+    // Normaliza a forma compuesta para evitar acentos "desfigurados"
+    if (base.normalize) base = base.normalize('NFC');
 
-        htmlFiles.forEach(file => {
-          const nombreLimpio = formatearNombre(file.name);
+    const palabras = base.split(/[-_]+/).filter(Boolean);
 
-          // Opción para el menú desplegable
-          const option = document.createElement('option');
-          option.value = file.name;
-          option.textContent = nombreLimpio;
-          select.appendChild(option);
+    const formateadas = palabras.map(p => {
+      if (esNumeroRomano(p)) return p.toUpperCase();
+      return capitalizar(p);
+    });
 
-          // Tarjeta táctil independiente
-          const card = document.createElement('a');
-          card.className = 'quiz-card';
-          card.href = file.name;
-          card.innerHTML = `<span>${nombreLimpio}</span><span class="icon">›</span>`;
-          listContainer.appendChild(card);
-        });
+    return formateadas.join(' ');
+  }
 
-      } catch (error) {
-        select.innerHTML = '<option value="" disabled selected>Error al cargar</option>';
-        listContainer.innerHTML = `<div class="status-msg">No se pudo obtener la lista de cuestionarios.</div>`;
+  // Ordena naturalmente (Cuestionario 2 antes que Cuestionario 10,
+  // y también entiende números romanos I, II, III, IV...)
+  const ROMANOS_ORDEN = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX'];
+
+  function valorOrden(nombreLegibleStr){
+    const partes = nombreLegibleStr.split(' ');
+    return partes.map(p => {
+      if (/^\d+$/.test(p)) return p.padStart(6, '0');
+      const idxRomano = ROMANOS_ORDEN.indexOf(p.toUpperCase());
+      if (idxRomano !== -1) return String(idxRomano + 1).padStart(6, '0');
+      return p.toLocaleLowerCase('es');
+    }).join(' ');
+  }
+
+  // ---------- Carga de cuestionarios ----------
+  async function cargarCuestionarios(){
+    const select = document.getElementById('quizSelect');
+    const listContainer = document.getElementById('quizList');
+
+    try {
+      const response = await fetch(apiUrl, { headers: { 'Accept': 'application/vnd.github+json' } });
+      if (!response.ok) throw new Error('No se pudo acceder al repositorio (' + response.status + ')');
+
+      const files = await response.json();
+      if (!Array.isArray(files)) throw new Error('Respuesta inesperada del repositorio');
+
+      let htmlFiles = files.filter(file =>
+        file.type === 'file' &&
+        /\.html?$/i.test(file.name) &&
+        file.name.toLowerCase() !== 'index.html'
+      );
+
+      if (htmlFiles.length === 0) {
+        select.innerHTML = '<option value="" disabled selected>No hay cuestionarios</option>';
+        listContainer.innerHTML = '<div class="status-msg">No se encontraron cuestionarios adicionales.</div>';
+        return;
       }
-    }
 
-    function abrirCuestionario() {
-      const select = document.getElementById('quizSelect');
-      const url = select.value;
-      if (url) {
-        window.location.href = url;
-      } else {
-        alert('Por favor, selecciona un cuestionario de la lista.');
-      }
-    }
+      // Pre-calcular nombre legible y orden
+      htmlFiles = htmlFiles.map(file => ({
+        ...file,
+        nombre: nombreLegible(file.name)
+      })).sort((a, b) => valorOrden(a.nombre).localeCompare(valorOrden(b.nombre), 'es'));
 
-    window.onload = cargarCuestionarios;
-  </script>
+      select.innerHTML = '<option value="" disabled selected>Elegí un cuestionario…</option>';
+      listContainer.innerHTML = '';
+
+      htmlFiles.forEach((file, i) => {
+        const option = document.createElement('option');
+        option.value = file.name;
+        option.textContent = file.nombre;
+        select.appendChild(option);
+
+        const card = document.createElement('a');
+        card.className = 'quiz-card';
+        card.href = encodeURI(file.name);
+        card.innerHTML =
+          `<span class="num">${i + 1}</span>` +
+          `<span class="label">${file.nombre}</span>` +
+          `<span class="icon" aria-hidden="true">›</span>`;
+        listContainer.appendChild(card);
+      });
+
+    } catch (error) {
+      select.innerHTML = '<option value="" disabled selected>Error al cargar</option>';
+      listContainer.innerHTML = '<div class="status-msg error">No se pudieron listar los cuestionarios automáticamente. Intentá recargar la página.</div>';
+      console.error(error);
+    }
+  }
+
+  window.abrirCuestionario = function(){
+    const select = document.getElementById('quizSelect');
+    const url = select.value;
+    if (url) {
+      window.location.href = encodeURI(url);
+    } else {
+      alert('Por favor seleccioná un cuestionario de la lista.');
+    }
+  };
+
+  window.addEventListener('DOMContentLoaded', cargarCuestionarios);
+})();
+</script>
 
 </body>
 </html>
